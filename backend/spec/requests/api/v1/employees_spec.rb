@@ -154,4 +154,118 @@ RSpec.describe "Employees", type: :request do
       expect(response).to have_http_status(:not_found)
     end
   end
+
+  describe "lifecycle actions" do
+    let(:today) { Date.new(2025, 6, 15) }
+    let(:employee) { create(:employee, hire_date: Date.new(2020, 1, 1)) }
+
+    around { |example| travel_to(today) { example.run } }
+
+    describe "POST /api/v1/employees/:id/terminate" do
+      it "terminates the employee" do
+        post "/api/v1/employees/#{employee.id}/terminate", params: { termination_date: "2025-06-01" }, as: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(data).to include("status" => "terminated", "termination_date" => "2025-06-01")
+      end
+
+      it "returns 400 without a date" do
+        post "/api/v1/employees/#{employee.id}/terminate", as: :json
+
+        expect(response).to have_http_status(:bad_request)
+      end
+
+      it "returns 422 for a future date" do
+        post "/api/v1/employees/#{employee.id}/terminate", params: { termination_date: "2025-06-16" }, as: :json
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(error["details"]).to have_key("termination_date")
+      end
+
+      it "returns 422 when already terminated" do
+        employee.update!(status: "terminated", termination_date: Date.new(2025, 1, 1))
+
+        post "/api/v1/employees/#{employee.id}/terminate", params: { termination_date: "2025-06-01" }, as: :json
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(error["details"]["base"]).to include("is already terminated")
+      end
+    end
+
+    describe "POST /api/v1/employees/:id/rehire" do
+      before do
+        create(:salary_record, employee: employee, effective_from: Date.new(2020, 1, 1))
+        employee.update!(status: "terminated", termination_date: Date.new(2025, 1, 1))
+      end
+
+      it "reactivates the employee" do
+        post "/api/v1/employees/#{employee.id}/rehire", as: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(data).to include("status" => "active", "termination_date" => nil)
+      end
+
+      it "records a new salary when given" do
+        post "/api/v1/employees/#{employee.id}/rehire", params: { salary_cents: 7_000_000 }, as: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(data["salary"]["amount_cents"]).to eq(7_000_000)
+        expect(employee.salary_records.order(:id).last.reason).to eq("rehire")
+      end
+
+      it "returns 422 for an employee who is not terminated" do
+        employee.update!(status: "active", termination_date: nil)
+
+        post "/api/v1/employees/#{employee.id}/rehire", as: :json
+
+        expect(response).to have_http_status(:unprocessable_content)
+      end
+    end
+
+    describe "DELETE /api/v1/employees/:id" do
+      it "soft-deletes and keeps the row" do
+        employee
+        expect { delete "/api/v1/employees/#{employee.id}" }.not_to change(Employee, :count)
+
+        expect(response).to have_http_status(:ok)
+        expect(data["deleted_at"]).to be_present
+        expect(Employee.kept).not_to include(employee)
+      end
+
+      it "returns 404 the second time" do
+        delete "/api/v1/employees/#{employee.id}"
+        delete "/api/v1/employees/#{employee.id}"
+
+        expect(response).to have_http_status(:not_found)
+      end
+    end
+
+    describe "POST /api/v1/employees/:id/restore" do
+      it "restores a deleted employee" do
+        employee.update!(deleted_at: Time.current)
+
+        post "/api/v1/employees/#{employee.id}/restore", as: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(data["deleted_at"]).to be_nil
+        expect(Employee.kept).to include(employee)
+      end
+
+      it "returns 422 on email when the address was taken meanwhile" do
+        employee.update!(deleted_at: Time.current)
+        create(:employee, email: employee.email)
+
+        post "/api/v1/employees/#{employee.id}/restore", as: :json
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(error["details"]).to have_key("email")
+      end
+
+      it "returns 404 for an employee that is not deleted" do
+        post "/api/v1/employees/#{employee.id}/restore", as: :json
+
+        expect(response).to have_http_status(:not_found)
+      end
+    end
+  end
 end

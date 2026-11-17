@@ -25,10 +25,30 @@ module Api
         render_employee employee
       end
 
+      def destroy
+        render_employee Employees::SoftDelete.call(employee: find_employee)
+      end
+
+      def terminate
+        render_employee Employees::Terminate.call(
+          employee: find_employee, termination_date: params.require(:termination_date)
+        )
+      end
+
+      def rehire
+        render_employee Employees::Rehire.call(
+          employee: find_employee, salary_cents: params[:salary_cents], effective_from: params[:effective_from]
+        )
+      end
+
+      def restore
+        render_employee Employees::Restore.call(employee: find_employee(Employee.deleted))
+      end
+
       private
 
-      def find_employee
-        Employee.kept.includes(:department, :job_title, country: :currency).find(params[:id])
+      def find_employee(scope = Employee.kept)
+        scope.includes(:department, :job_title, country: :currency).find(params[:id])
       end
 
       # Unknown keys are rejected rather than silently dropped, so a client
