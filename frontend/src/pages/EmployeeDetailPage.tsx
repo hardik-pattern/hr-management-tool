@@ -3,6 +3,7 @@ import { Alert, Button, Spinner } from 'react-bootstrap'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useEmployee } from '../api/employees'
 import { useSalaryRecords } from '../api/salary'
+import ChangeSalaryDialog from '../features/employees/ChangeSalaryDialog'
 import DeleteDialog from '../features/employees/DeleteDialog'
 import EmployeeProfile from '../features/employees/EmployeeProfile'
 import RehireDialog from '../features/employees/RehireDialog'
@@ -20,7 +21,7 @@ export default function EmployeeDetailPage() {
   const state = useLocation().state as ListLocationState | null
   const navigate = useNavigate()
   const [flash, setFlash] = useFlash()
-  const [dialog, setDialog] = useState<'terminate' | 'rehire' | 'delete' | null>(null)
+  const [dialog, setDialog] = useState<'salary' | 'terminate' | 'rehire' | 'delete' | null>(null)
   const id = /^[1-9]\d*$/.test(params.id ?? '') ? Number(params.id) : undefined
 
   const employee = useEmployee(id)
@@ -80,9 +81,14 @@ export default function EmployeeDetailPage() {
                 Edit
               </Link>
               {employee.data.status === 'active' ? (
-                <Button variant="outline-secondary" onClick={() => setDialog('terminate')}>
-                  Terminate
-                </Button>
+                <>
+                  <Button variant="primary" onClick={() => setDialog('salary')}>
+                    Change salary
+                  </Button>
+                  <Button variant="outline-secondary" onClick={() => setDialog('terminate')}>
+                    Terminate
+                  </Button>
+                </>
               ) : (
                 <Button variant="outline-secondary" onClick={() => setDialog('rehire')}>
                   Rehire
@@ -96,6 +102,17 @@ export default function EmployeeDetailPage() {
           <EmployeeProfile employee={employee.data} latestRecord={history.data?.[0]} />
           <SalaryHistory history={history} />
 
+          {dialog === 'salary' && (
+            <ChangeSalaryDialog
+              employee={employee.data}
+              latestRecord={history.data?.[0]}
+              onClose={() => setDialog(null)}
+              onDone={(notice) => {
+                setDialog(null)
+                setFlash({ notice })
+              }}
+            />
+          )}
           {dialog === 'terminate' && (
             <TerminateDialog
               employee={employee.data}

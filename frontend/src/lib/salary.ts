@@ -1,5 +1,10 @@
 import type { SalaryRecord } from '../api/types'
 
+/** How much +to+ differs from +from+, as a percentage of +from+. */
+export function percentChange(from: number, to: number): number {
+  return ((to - from) / from) * 100
+}
+
 /**
  * Percentage change of each record against the one before it, for a history
  * as the API returns it (newest first). The oldest record has nothing to
@@ -11,9 +16,7 @@ import type { SalaryRecord } from '../api/types'
 export function salaryChanges(newestFirst: SalaryRecord[]): (number | null)[] {
   return newestFirst.map((record, index) => {
     const previous = newestFirst[index + 1]
-    return previous
-      ? ((record.amount_cents - previous.amount_cents) / previous.amount_cents) * 100
-      : null
+    return previous ? percentChange(previous.amount_cents, record.amount_cents) : null
   })
 }
 

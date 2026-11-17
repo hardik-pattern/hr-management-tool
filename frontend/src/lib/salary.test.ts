@@ -1,8 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import { buildSalaryRecord } from '../test/fixtures'
-import { formatPercentChange, salaryChanges } from './salary'
+import { formatPercentChange, percentChange, salaryChanges } from './salary'
 
 const record = (id: number, amount_cents: number) => buildSalaryRecord({ id, amount_cents })
+
+describe('percentChange', () => {
+  it('is how much the new amount differs from the old, as a percentage of the old', () => {
+    expect(percentChange(5_000_000, 5_500_000)).toBeCloseTo(10, 10)
+    expect(percentChange(5_000_000, 4_750_000)).toBeCloseTo(-5, 10)
+    expect(percentChange(5_000_000, 5_000_000)).toBe(0)
+  })
+})
 
 describe('salaryChanges', () => {
   it('compares each record with the one before it; the oldest has nothing to compare with', () => {
