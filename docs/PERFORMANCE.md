@@ -1,0 +1,57 @@
+# Performance notes
+
+Measured on a developer laptop (Apple Silicon, SQLite, Ruby 3.3). Numbers are
+from single runs, so treat them as orders of magnitude, not benchmarks. This
+file grows as later steps add measurements (listing, analytics).
+
+## Seeding (step B11)
+
+`bin/rails db:seed` builds the demo organisation.
+
+| What | Result |
+|---|---|
+| Employees created | 10,000 |
+| Salary records created | 25,741 (about 2.6 per employee) |
+| Reference data (9 currencies, 10 countries, 8 departments, 40 job titles, 400 pay bands) | well under 1 s |
+| Full `db:seed` on an empty database | **2.9 s** |
+| `db:seed` when employees already exist | 0.2 s (generation is skipped) |
+| SQLite file size after seeding | 4.9 MB |
+
+How it stays fast:
+
+- Rows are written with `insert_all` in batches of 1,000 employees (with
+  their salary records), inside one transaction. This skips validations and
+  callbacks, so the generator's specs check that what it writes satisfies the
+  model rules.
+- Pay bands are written with one `upsert_all` rather than a find-and-update
+  per row. Re-running the seed is safe.
+- Everything random uses one `Random.new(seed)`, so the same seed and date
+  give identical data. A spec compares two runs row by row.
+
+Caveat: history dates are built relative to "today", so the dataset is
+identical for a given day but shifts as time passes (for example, more people
+become stale as their last raise ages). The generator takes `today:` so tests
+pin the date.
+
+## Shape of the generated data
+
+Planted on purpose so the insights have something to find:
+
+| Case | How it is planted |
+|---|---|
+| Paid outside the pay band | 0.5% of employees, 5-15% beyond the band edge (51 active employees in the 10,000 run) |
+| No raise for over 24 months | about 9% of long-tenured active employees (581 active employees in the 10,000 run) |
+| Gender pay gap | women paid 4% less in 6 titles; measured mean position in band 0.965 (women) vs 1.007 (men) there, and 0.9985 vs 0.9991 elsewhere |
+| Left the company | about 8.5% of employees with a valid termination date (802 in the run) |
+| Soft-deleted | 8 records |
+
+The gender gap exists only in this fake data, so the gender pay gap insight
+can demonstrate itself. It says nothing about any real organisation.
+
+## Test suite
+
+The whole backend suite (243 examples at this step) runs in about 7 seconds.
+The seeding specs run in about 4 seconds of that: read-only specs about a
+3,000-employee dataset share one dataset per group (created once, removed
+afterwards) instead of regenerating it for every example, which took the
+seeding specs from about 19 s to about 4 s.
