@@ -227,10 +227,10 @@ Each step ends with: tests green, `bin/rubocop` clean, one commit.
 ### Phase B-3: Listing at scale
 - [x] **B11. `feat: seed 10,000 employees`**: `db/seeds.rb` plus `Seeds::EmployeeGenerator` (fixed RNG seed, realistic salary distributions per country and level, pay bands generated per title/country, a deliberate few out-of-band and stale cases for the insights, about 8% terminated with valid dates, and a handful of soft-deleted rows). `insert_all` in batches. Spec for the generator's determinism and distributions on a small N. Record seed duration in `docs/PERFORMANCE.md`.
 - [x] **B12. `feat: employee search, filter, sort, pagination`**: `EmployeeSearch` query object. Filters: q, country, department, job_title, status, salary range. Sort whitelist. Keyset pagination with `per_page` cap. Specs per filter and combination, plus an N+1 guard spec (query count assertion).
-- [ ] **B13. `feat: CSV export`**: streamed CSV of the filtered set. Spec for headers, escaping, and large-set streaming.
+- [ ] **B13. ON HOLD (user decision): `feat: CSV export`**: streamed CSV of the filtered set. Spec for headers, escaping, and large-set streaming.
 
-### Phase B-4: Answering questions
-- [ ] **B13a. `test: deleted and terminated rows excluded from listings by default`**: regression specs on `EmployeeSearch` and CSV: deleted never shown unless `deleted=only`; terminated shown only via `status`.
+### Phase B-4: Answering questions (ON HOLD, user decision: not building yet)
+- [x] **B13a. `test: deleted and terminated rows excluded from listings by default`**: covered by the B12 specs for `EmployeeSearch` (defaults, status, deleted=only); the CSV half returns with B13 if it is resumed. Original scope: regression specs on `EmployeeSearch` and CSV: deleted never shown unless `deleted=only`; terminated shown only via `status`.
 - [ ] **B14. `feat: percentile helper`**: `Analytics::Percentile` (window-function SQL, with Ruby fallback if needed). Edge-case specs: empty set, one row, even/odd counts, ties.
 - [ ] **B15. `feat: analytics query engine`**: `Analytics::QueryEngine` taking a validated `Analytics::Spec` (whitelisted metric/group_by/filters, rejects anything else). USD normalization. Specs for every metric and group_by, empty groups, mixed currencies, default `active` scope, `status=all`, and soft-deleted rows never counted.
 - [ ] **B16. `feat: analytics summary endpoint`**: `GET /analytics/summary`. Request specs including invalid spec -> 400.
@@ -269,7 +269,7 @@ React + Vite + TypeScript, Bootstrap 5 via react-bootstrap (no custom design sys
 - [ ] **F8. `feat: insights dashboard`**: payroll by department, headcount by country, pay distribution shown as tables with Bootstrap progress bars (no chart library up front; add one later only if needed), gender gap, out-of-band and stale lists.
 - [ ] **F8a. `feat: common questions page`**: one-click list of the catalog questions (from B18a); clicking one runs it and shows the answer table plus the spec used. This is the main "answer questions" surface and needs no AI.
 - [ ] **F9. `feat: analytics explorer`**: pick metric, group-by, filters; results table with inline bars; shows the spec used.
-- [ ] **F10. `feat: CSV export button`**: exports the current filter.
+- [ ] **F10. ON HOLD with B13: `feat: CSV export button`**: exports the current filter.
 - [ ] **F11. `chore: UX polish and accessibility`**: keyboard navigation, aria labels, responsive layout, empty/error copy.
 
 ---
