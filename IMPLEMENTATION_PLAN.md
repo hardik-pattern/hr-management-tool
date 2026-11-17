@@ -258,7 +258,7 @@ Each step ends with: tests green, `bin/rubocop` clean, one commit.
 
 React + Vite + TypeScript, Bootstrap 5 via react-bootstrap (no custom design system, no heavy grid library), TanStack Query, react-router, Vitest + React Testing Library, MSW for API mocking in tests.
 
-- [ ] **F1. `chore: scaffold React app`**: Vite, TS, Bootstrap 5, react-bootstrap, eslint, prettier, Vitest, MSW. Layout shell with navigation (Employees, Insights, Questions).
+- [x] **F1. `chore: scaffold React app`**: Vite, TS, Bootstrap 5, react-bootstrap, eslint, prettier, Vitest, MSW. Layout shell with navigation (Employees, Insights, Questions).
 - [ ] **F2. `feat: API client and query hooks`**: typed client, error-envelope handling, TanStack Query setup. Tests with MSW.
 - [ ] **F3. `feat: employees table`**: react-bootstrap `Table` with our own small pagination and sortable-header components (server-side). Loading, empty, error states.
 - [ ] **F4. `feat: filters and search bar`**: country, department, job title, status, salary range, debounced text search, URL-synced state.
