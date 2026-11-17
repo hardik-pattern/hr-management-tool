@@ -9,6 +9,15 @@ module Api
       # changes through Salaries::Change.
       UPDATE_FIELDS = %i[full_name email gender department_id job_title_id].freeze
 
+      def index
+        result = EmployeeSearch.call(request.query_parameters)
+
+        render json: {
+          data: result.employees.map { |employee| EmployeePresenter.new(employee) },
+          meta: { total: result.total, per_page: result.per_page, next_cursor: result.next_cursor }
+        }
+      end
+
       def create
         attributes = strict_params(:employee, CREATE_FIELDS)
         employee = Employees::Create.call(salary_cents: nil, **attributes.symbolize_keys)

@@ -17,6 +17,62 @@ RSpec.describe "Employees", type: :request do
   def data = response.parsed_body.fetch("data")
   def error = response.parsed_body.fetch("error")
 
+  describe "GET /api/v1/employees" do
+    let!(:employees) { create_list(:employee, 3) }
+
+    it "lists employees with paging metadata" do
+      get "/api/v1/employees", params: { per_page: 2, sort: "employee_number" }
+
+      expect(response).to have_http_status(:ok)
+      expect(data.size).to eq(2)
+      expect(data.first).to include("employee_number", "salary", "country")
+      expect(response.parsed_body["meta"]).to include("total" => 3, "per_page" => 2, "next_cursor" => be_present)
+    end
+
+    it "follows the cursor to the next page" do
+      get "/api/v1/employees", params: { per_page: 2, sort: "employee_number" }
+      cursor = response.parsed_body.dig("meta", "next_cursor")
+
+      get "/api/v1/employees", params: { per_page: 2, sort: "employee_number", cursor: cursor }
+
+      expect(data.size).to eq(1)
+      expect(response.parsed_body.dig("meta", "next_cursor")).to be_nil
+    end
+
+    it "filters by query string" do
+      get "/api/v1/employees", params: { q: employees.first.full_name }
+
+      expect(data.pluck("id")).to eq([ employees.first.id ])
+    end
+
+    it "returns 400 for an unknown parameter" do
+      get "/api/v1/employees", params: { contry_id: 1 }
+
+      expect(response).to have_http_status(:bad_request)
+      expect(error["message"]).to include("contry_id")
+    end
+
+    it "returns 400 for an invalid filter value" do
+      get "/api/v1/employees", params: { status: "retired" }
+
+      expect(response).to have_http_status(:bad_request)
+    end
+
+    it "returns 400 for salary filters without a country" do
+      get "/api/v1/employees", params: { salary_min: 100 }
+
+      expect(response).to have_http_status(:bad_request)
+    end
+
+    it "returns an empty page, not an error, when nothing matches" do
+      get "/api/v1/employees", params: { q: "nobody-by-this-name" }
+
+      expect(response).to have_http_status(:ok)
+      expect(data).to eq([])
+      expect(response.parsed_body["meta"]).to include("total" => 0, "next_cursor" => nil)
+    end
+  end
+
   describe "POST /api/v1/employees" do
     it "creates the employee with a hire record and returns it" do
       expect { post "/api/v1/employees", params: valid_params, as: :json }

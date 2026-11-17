@@ -48,9 +48,44 @@ Planted on purpose so the insights have something to find:
 The gender gap exists only in this fake data, so the gender pay gap insight
 can demonstrate itself. It says nothing about any real organisation.
 
+## Employee list (step B12)
+
+`EmployeeSearch` against the 10,000-employee seed, averaged over 5 runs after
+a warm-up. Each figure covers the page query, the total count and the
+association preloading, but not JSON rendering or HTTP.
+
+| Request | Time |
+|---|---|
+| First page, default sort | 3.2 ms |
+| `q=Asha` | 2.0 ms |
+| Country and department filter | 3.8 ms |
+| Sorted by salary, descending (one country) | 3.4 ms |
+| `status=all`, 100 rows per page | 4.2 ms |
+| Salary range within a country | 2.9 ms |
+| Deep page (about the 300th of 400) | 3.1 ms |
+
+The deep page costs the same as the first because pagination is keyset
+(`WHERE (sort_col, id) > cursor`), not `OFFSET`, which would scan and discard
+every earlier row.
+
+Associations are preloaded with `includes`, so a page is a fixed number of
+queries however many rows it holds. A spec compares the query count for a
+2-row and a 12-row page; I checked it fails (50 queries instead of 10) when
+the `includes` is removed.
+
+Known limits:
+
+- Salaries are stored in each employee's local currency, so sorting by salary
+  across countries mixes currencies. The salary range filter therefore
+  requires a country, and the UI should treat salary sorting as meaningful
+  within one country. Cross-country comparison belongs to the analytics
+  endpoints, which convert to USD.
+- `q` matches word prefixes with `LIKE 'x%'`. SQLite's `LIKE` is
+  case-insensitive for ASCII only; on Postgres this would be `ILIKE`.
+
 ## Test suite
 
-The whole backend suite (243 examples at this step) runs in about 7 seconds.
+The whole backend suite runs in about 10 seconds.
 The seeding specs run in about 4 seconds of that: read-only specs about a
 3,000-employee dataset share one dataset per group (created once, removed
 afterwards) instead of regenerating it for every example, which took the

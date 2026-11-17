@@ -226,7 +226,7 @@ Each step ends with: tests green, `bin/rubocop` clean, one commit.
 
 ### Phase B-3: Listing at scale
 - [x] **B11. `feat: seed 10,000 employees`**: `db/seeds.rb` plus `Seeds::EmployeeGenerator` (fixed RNG seed, realistic salary distributions per country and level, pay bands generated per title/country, a deliberate few out-of-band and stale cases for the insights, about 8% terminated with valid dates, and a handful of soft-deleted rows). `insert_all` in batches. Spec for the generator's determinism and distributions on a small N. Record seed duration in `docs/PERFORMANCE.md`.
-- [ ] **B12. `feat: employee search, filter, sort, pagination`**: `EmployeeSearch` query object. Filters: q, country, department, job_title, status, salary range. Sort whitelist. Keyset pagination with `per_page` cap. Specs per filter and combination, plus an N+1 guard spec (query count assertion).
+- [x] **B12. `feat: employee search, filter, sort, pagination`**: `EmployeeSearch` query object. Filters: q, country, department, job_title, status, salary range. Sort whitelist. Keyset pagination with `per_page` cap. Specs per filter and combination, plus an N+1 guard spec (query count assertion).
 - [ ] **B13. `feat: CSV export`**: streamed CSV of the filtered set. Spec for headers, escaping, and large-set streaming.
 
 ### Phase B-4: Answering questions
