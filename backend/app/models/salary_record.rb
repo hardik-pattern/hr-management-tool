@@ -28,9 +28,11 @@ class SalaryRecord < ApplicationRecord
   end
 
   # Future-dated records are refused because employees.current_salary_cents
-  # would otherwise show a salary that is not yet in effect.
+  # would otherwise show a salary that is not yet in effect. The hire record
+  # is exempt: HR enters new hires before their start date, and that first
+  # salary is the only one the employee has.
   def effective_from_not_in_future
-    return if effective_from.blank?
+    return if effective_from.blank? || reason == "hire"
 
     errors.add(:effective_from, "cannot be in the future") if effective_from > Date.current
   end

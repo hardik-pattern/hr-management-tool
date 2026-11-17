@@ -52,10 +52,18 @@ RSpec.describe SalaryRecord, type: :model do
     end
 
     it "rejects a future effective date" do
+      record.reason = "merit"
       record.effective_from = Date.new(2025, 6, 16)
 
       expect(record).not_to be_valid
       expect(record.errors[:effective_from]).to include("cannot be in the future")
+    end
+
+    it "accepts a future date for the hire record" do
+      record.reason = "hire"
+      record.effective_from = Date.new(2025, 7, 1)
+
+      expect(record).to be_valid
     end
 
     it "accepts today" do
