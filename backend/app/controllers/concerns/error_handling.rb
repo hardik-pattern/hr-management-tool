@@ -11,6 +11,7 @@ module ErrorHandling
     rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
     rescue_from ActiveRecord::RecordInvalid, with: :render_validation_failed
     rescue_from ActionController::ParameterMissing, with: :render_bad_request
+    rescue_from ActionController::UnpermittedParameters, with: :render_bad_request
   end
 
   # Catch-all for unmatched paths (see config/routes.rb); without it Rails
