@@ -209,7 +209,7 @@ Each step ends with: tests green, `bin/rubocop` clean, one commit.
 ### Phase B-0: Foundations
 - [x] **B0. `docs: add requirements document`**: one page: goal, scope, out of scope with reasons, sample questions as acceptance criteria. Also copy this plan's section 3 into `docs/DESIGN_NOTES.md`.
 - [x] **B1. `chore: scaffold Rails API app`**: `rails new backend --api --database=sqlite3 --skip-test`. Add RSpec, FactoryBot, shoulda-matchers, rubocop (rails-omakase), brakeman, simplecov. Health check route. CI workflow runs rspec + rubocop + brakeman.
-- [ ] **B2. `feat: add error handling and JSON envelope`**: `ApplicationController` rescues (`RecordNotFound` -> 404, `RecordInvalid` -> 422, param errors -> 400) into the standard envelope. Request specs.
+- [x] **B2. `feat: add error handling and JSON envelope`**: `ApplicationController` rescues (`RecordNotFound` -> 404, `RecordInvalid` -> 422, param errors -> 400) into the standard envelope. Request specs.
 
 ### Phase B-1: Reference data
 - [ ] **B3. `feat: currencies and countries`**: migrations, models, validations, factories, specs. Money helper `Money.format(cents, currency)` with exponent handling (JPY=0, USD=2), plus `to_usd_cents`. Unit tests for rounding.
