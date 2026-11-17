@@ -10,11 +10,17 @@ interface Props {
   onSort: (sort: EmployeeSort) => void
   /** True while showing the previous page's rows during a fetch. */
   stale?: boolean
+  /** Salary can be sorted once a country is chosen, because then it is one currency. */
+  salarySortable?: boolean
 }
 
-// Salary is not sortable yet: amounts are in each employee's own currency, so
-// ordering across countries would be misleading.
-export default function EmployeeTable({ employees, sort, onSort, stale = false }: Props) {
+export default function EmployeeTable({
+  employees,
+  sort,
+  onSort,
+  stale = false,
+  salarySortable = false,
+}: Props) {
   return (
     <div className="table-responsive">
       <Table hover aria-busy={stale} className={stale ? 'opacity-50' : undefined}>
@@ -28,9 +34,19 @@ export default function EmployeeTable({ employees, sort, onSort, stale = false }
             <th scope="col">Country</th>
             <SortableHeader column="hire_date" label="Hired" sort={sort} onSort={onSort} />
             <th scope="col">Status</th>
-            <th scope="col" className="text-end">
-              Salary
-            </th>
+            {salarySortable ? (
+              <SortableHeader
+                column="current_salary_cents"
+                label="Salary"
+                sort={sort}
+                onSort={onSort}
+                alignEnd
+              />
+            ) : (
+              <th scope="col" className="text-end">
+                Salary
+              </th>
+            )}
           </tr>
         </thead>
         <tbody>

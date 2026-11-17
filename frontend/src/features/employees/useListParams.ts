@@ -1,46 +1,103 @@
 import { useSearchParams } from 'react-router-dom'
-import type { EmployeeSort } from '../../api/types'
+import type { EmployeeFilters, EmployeeSort, StatusFilter } from '../../api/types'
 
-export const SORTABLE_COLUMNS = ['full_name', 'hire_date', 'employee_number'] as const
-export type SortableColumn = (typeof SORTABLE_COLUMNS)[number]
+export type SortableColumn = 'full_name' | 'hire_date' | 'employee_number' | 'current_salary_cents'
+
+/** Sortable whatever the filters. */
+const ALWAYS_SORTABLE: readonly SortableColumn[] = ['full_name', 'hire_date', 'employee_number']
 
 export const PAGE_SIZES = [25, 50, 100] as const
 export const DEFAULT_SORT: EmployeeSort = 'full_name'
 export const DEFAULT_PAGE_SIZE = 25
 
-const VALID_SORTS = new Set<string>(SORTABLE_COLUMNS.flatMap((column) => [column, `-${column}`]))
+export type ListFilters = Pick<
+  EmployeeFilters,
+  | 'q'
+  | 'country_id'
+  | 'department_id'
+  | 'job_title_id'
+  | 'status'
+  | 'deleted'
+  | 'salary_min'
+  | 'salary_max'
+>
+
+const STATUSES: readonly StatusFilter[] = ['active', 'terminated', 'all']
 
 /** Sort order for a click on a column header: ascending first, then flip. */
 export function nextSort(current: EmployeeSort, column: SortableColumn): EmployeeSort {
   return current === column ? `-${column}` : column
 }
 
+function positiveInteger(raw: string | null): number | undefined {
+  const value = Number(raw)
+  return raw && Number.isInteger(value) && value > 0 ? value : undefined
+}
+
+function nonNegativeInteger(raw: string | null): number | undefined {
+  const value = Number(raw)
+  return raw && Number.isInteger(value) && value >= 0 ? value : undefined
+}
+
+function parseFilters(params: URLSearchParams): ListFilters {
+  const country_id = positiveInteger(params.get('country_id'))
+  const status = params.get('status') as StatusFilter | null
+  const q = params.get('q')?.trim()
+
+  const filters: ListFilters = {
+    q: q || undefined,
+    country_id,
+    department_id: positiveInteger(params.get('department_id')),
+    job_title_id: positiveInteger(params.get('job_title_id')),
+    status: status && STATUSES.includes(status) ? status : undefined,
+    deleted: params.get('deleted') === 'only' ? 'only' : undefined,
+    // Salaries are in each country's currency, so a range means nothing without one.
+    salary_min: country_id ? nonNegativeInteger(params.get('salary_min')) : undefined,
+    salary_max: country_id ? nonNegativeInteger(params.get('salary_max')) : undefined,
+  }
+  // Drop absent keys so "any filter set?" is just a key count.
+  return Object.fromEntries(Object.entries(filters).filter(([, value]) => value !== undefined))
+}
+
 /**
- * The list's sort order and page size, kept in the URL so a reload or a
- * shared link shows the same view. Values that are not valid fall back to the
- * defaults, so a hand-edited URL cannot break the page.
+ * The list's sort order, page size and filters, kept in the URL so a reload
+ * or a shared link shows the same view. Anything that is not valid is
+ * ignored, so a hand-edited URL cannot break the page. Defaults are left out
+ * of the URL to keep it short.
  */
 export function useListParams() {
   const [params, setParams] = useSearchParams()
+  const filters = parseFilters(params)
 
+  // Amounts in different currencies do not compare, so salary sorting needs a country.
+  const salarySortable = filters.country_id !== undefined
+  const validSorts = new Set<string>(
+    [...ALWAYS_SORTABLE, ...(salarySortable ? (['current_salary_cents'] as const) : [])].flatMap(
+      (column) => [column, `-${column}`],
+    ),
+  )
   const rawSort = params.get('sort')
-  const sort = (rawSort && VALID_SORTS.has(rawSort) ? rawSort : DEFAULT_SORT) as EmployeeSort
+  const sort = (rawSort && validSorts.has(rawSort) ? rawSort : DEFAULT_SORT) as EmployeeSort
 
   const rawPerPage = Number(params.get('per_page'))
   const perPage = (PAGE_SIZES as readonly number[]).includes(rawPerPage)
     ? rawPerPage
     : DEFAULT_PAGE_SIZE
 
-  // Defaults are left out of the URL to keep it short.
-  const update = (changes: { sort?: EmployeeSort; perPage?: number }) => {
+  /** Applies several changes in one navigation; undefined or '' removes a key. */
+  const update = (changes: Record<string, string | number | undefined>) => {
     const next = new URLSearchParams(params)
-    if (changes.sort !== undefined) {
-      if (changes.sort === DEFAULT_SORT) next.delete('sort')
-      else next.set('sort', changes.sort)
+    for (const [key, value] of Object.entries(changes)) {
+      const isDefault =
+        (key === 'sort' && value === DEFAULT_SORT) ||
+        (key === 'per_page' && value === DEFAULT_PAGE_SIZE)
+      if (value === undefined || value === '' || isDefault) next.delete(key)
+      else next.set(key, String(value))
     }
-    if (changes.perPage !== undefined) {
-      if (changes.perPage === DEFAULT_PAGE_SIZE) next.delete('per_page')
-      else next.set('per_page', String(changes.perPage))
+    // A salary sort only makes sense within one country; do not leave it
+    // lying in the URL to come back by surprise when a country is chosen again.
+    if (!next.get('country_id') && next.get('sort')?.endsWith('current_salary_cents')) {
+      next.delete('sort')
     }
     setParams(next, { replace: true })
   }
@@ -48,7 +105,23 @@ export function useListParams() {
   return {
     sort,
     perPage,
+    filters,
+    salarySortable,
+    hasFilters: Object.keys(filters).length > 0,
     setSort: (value: EmployeeSort) => update({ sort: value }),
-    setPerPage: (value: number) => update({ perPage: value }),
+    setPerPage: (value: number) => update({ per_page: value }),
+    setFilters: (changes: { [K in keyof ListFilters]?: ListFilters[K] | undefined }) =>
+      update(changes),
+    clearFilters: () =>
+      update({
+        q: undefined,
+        country_id: undefined,
+        department_id: undefined,
+        job_title_id: undefined,
+        status: undefined,
+        deleted: undefined,
+        salary_min: undefined,
+        salary_max: undefined,
+      }),
   }
 }

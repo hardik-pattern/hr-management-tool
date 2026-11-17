@@ -1,14 +1,18 @@
 import { Alert, Button, Spinner } from 'react-bootstrap'
 import { useEmployees } from '../api/employees'
 import CursorPagination from '../features/employees/CursorPagination'
+import EmployeeFilters from '../features/employees/EmployeeFilters'
 import EmployeeTable from '../features/employees/EmployeeTable'
 import { useCursorPager } from '../features/employees/useCursorPager'
 import { useListParams } from '../features/employees/useListParams'
 
 export default function EmployeesPage() {
-  const { sort, perPage, setSort, setPerPage } = useListParams()
-  const pager = useCursorPager(`${sort}|${perPage}`)
+  const list = useListParams()
+  const { sort, perPage, filters, setSort, setPerPage } = list
+  // Any change to the view starts again from the first page.
+  const pager = useCursorPager(JSON.stringify({ sort, perPage, filters }))
   const { data, error, isPending, isPlaceholderData, refetch, isFetching } = useEmployees({
+    ...filters,
     sort,
     per_page: perPage,
     cursor: pager.cursor,
@@ -17,6 +21,13 @@ export default function EmployeesPage() {
   return (
     <>
       <h1 className="h3 mb-3">Employees</h1>
+
+      <EmployeeFilters
+        filters={filters}
+        hasFilters={list.hasFilters}
+        onChange={list.setFilters}
+        onClear={list.clearFilters}
+      />
 
       {isPending && (
         <div className="text-center py-5">
@@ -50,6 +61,7 @@ export default function EmployeesPage() {
           sort={sort}
           onSort={setSort}
           stale={isPlaceholderData}
+          salarySortable={list.salarySortable}
         />
       )}
 

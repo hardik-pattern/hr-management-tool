@@ -5,20 +5,8 @@ import { describe, expect, it } from 'vitest'
 import { buildEmployee, employeeList, errorBody } from '../test/fixtures'
 import { renderWithProviders } from '../test/renderWithProviders'
 import { server } from '../test/server'
+import { serveEmployees } from '../test/serveEmployees'
 import EmployeesPage from './EmployeesPage'
-
-/** Serves lists and records the query string of every request. */
-function serveList(respond: (params: URLSearchParams) => ReturnType<typeof employeeList>) {
-  const searches: URLSearchParams[] = []
-  server.use(
-    http.get('/api/v1/employees', ({ request }) => {
-      const params = new URL(request.url).searchParams
-      searches.push(params)
-      return HttpResponse.json(respond(params))
-    }),
-  )
-  return searches
-}
 
 const asha = buildEmployee({ id: 1, full_name: 'Asha Rao', employee_number: 'E000001' })
 const liam = buildEmployee({
@@ -32,7 +20,7 @@ const liam = buildEmployee({
 
 describe('EmployeesPage table', () => {
   it('shows a loading indicator, then the employees', async () => {
-    serveList(() => employeeList([asha]))
+    serveEmployees(() => employeeList([asha]))
     renderWithProviders(<EmployeesPage />)
 
     expect(screen.getByRole('status')).toHaveTextContent('Loading employees')
@@ -42,7 +30,7 @@ describe('EmployeesPage table', () => {
   })
 
   it('shows each employee’s details with salary in their own currency', async () => {
-    serveList(() => employeeList([asha, liam]))
+    serveEmployees(() => employeeList([asha, liam]))
     renderWithProviders(<EmployeesPage />)
 
     const rows = await screen.findAllByRole('row')
@@ -59,7 +47,7 @@ describe('EmployeesPage table', () => {
   })
 
   it('says so when nothing matches', async () => {
-    serveList(() => employeeList([]))
+    serveEmployees(() => employeeList([]))
     renderWithProviders(<EmployeesPage />)
 
     expect(await screen.findByText('No employees match.')).toBeInTheDocument()
@@ -98,7 +86,7 @@ describe('EmployeesPage table', () => {
 
 describe('EmployeesPage sorting', () => {
   it('requests name order by default and marks the sorted column', async () => {
-    const searches = serveList(() => employeeList([asha]))
+    const searches = serveEmployees(() => employeeList([asha]))
     renderWithProviders(<EmployeesPage />)
     await screen.findByText('Asha Rao')
 
@@ -111,7 +99,7 @@ describe('EmployeesPage sorting', () => {
   })
 
   it('sorts by a column on click and flips direction on a second click', async () => {
-    const searches = serveList(() => employeeList([asha]))
+    const searches = serveEmployees(() => employeeList([asha]))
     renderWithProviders(<EmployeesPage />)
     await screen.findByText('Asha Rao')
 
@@ -131,7 +119,7 @@ describe('EmployeesPage sorting', () => {
   })
 
   it('starts from the sort in the URL', async () => {
-    const searches = serveList(() => employeeList([asha]))
+    const searches = serveEmployees(() => employeeList([asha]))
     renderWithProviders(<EmployeesPage />, { route: '/employees?sort=-employee_number' })
     await screen.findByText('Asha Rao')
 
@@ -143,7 +131,7 @@ describe('EmployeesPage sorting', () => {
   })
 
   it('does not offer sorting by salary', async () => {
-    serveList(() => employeeList([asha]))
+    serveEmployees(() => employeeList([asha]))
     renderWithProviders(<EmployeesPage />)
     await screen.findByText('Asha Rao')
 
@@ -155,7 +143,7 @@ describe('EmployeesPage sorting', () => {
 describe('EmployeesPage pagination', () => {
   /** Three pages of one row each, linked by cursors "c1" and "c2". */
   function servePages() {
-    return serveList((params) => {
+    return serveEmployees((params) => {
       const cursor = params.get('cursor')
       const pages = {
         none: { rows: [asha], next: 'c1' },
@@ -210,7 +198,7 @@ describe('EmployeesPage pagination', () => {
   })
 
   it('shows which rows are on screen out of the total', async () => {
-    serveList((params) =>
+    serveEmployees((params) =>
       params.get('cursor')
         ? employeeList([liam], { total: 27, next_cursor: null })
         : employeeList([asha], { total: 27, next_cursor: 'c1' }),
