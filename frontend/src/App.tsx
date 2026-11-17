@@ -1,6 +1,8 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout'
+import EmployeeCreatePage from './pages/EmployeeCreatePage'
 import EmployeeDetailPage from './pages/EmployeeDetailPage'
+import EmployeeEditPage from './pages/EmployeeEditPage'
 import EmployeesPage from './pages/EmployeesPage'
 import NotFoundPage from './pages/NotFoundPage'
 
@@ -11,7 +13,9 @@ export default function App() {
       <Route element={<Layout />}>
         <Route index element={<Navigate to="/employees" replace />} />
         <Route path="employees" element={<EmployeesPage />} />
+        <Route path="employees/new" element={<EmployeeCreatePage />} />
         <Route path="employees/:id" element={<EmployeeDetailPage />} />
+        <Route path="employees/:id/edit" element={<EmployeeEditPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

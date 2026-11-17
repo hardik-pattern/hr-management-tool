@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { Route, Routes } from 'react-router-dom'
@@ -233,5 +233,36 @@ describe('EmployeeDetailPage problems', () => {
     renderDetail()
 
     expect(await screen.findByText(/deleted on 1 Jun 2025/)).toBeInTheDocument()
+  })
+})
+
+describe('EmployeeDetailPage actions', () => {
+  it('links to the edit form', async () => {
+    serveEmployee()
+    renderDetail()
+    await screen.findByRole('heading', { name: 'Asha Rao' })
+
+    expect(screen.getByRole('link', { name: 'Edit' })).toHaveAttribute('href', '/employees/7/edit')
+  })
+
+  it('shows the notice it was opened with, and lets it be dismissed', async () => {
+    serveEmployee()
+    renderDetail({ route: { pathname: '/employees/7', state: { notice: 'Employee created.' } } })
+
+    const notice = await screen.findByText('Employee created.')
+    expect(notice).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: /close/i }))
+
+    // The alert fades out before it is removed.
+    await waitFor(() => expect(screen.queryByText('Employee created.')).not.toBeInTheDocument())
+  })
+
+  it('shows no notice when opened normally', async () => {
+    serveEmployee()
+    renderDetail()
+    await screen.findByRole('heading', { name: 'Asha Rao' })
+
+    expect(screen.queryByRole('button', { name: /close/i })).not.toBeInTheDocument()
   })
 })

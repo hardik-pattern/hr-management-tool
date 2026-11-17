@@ -263,7 +263,7 @@ React + Vite + TypeScript, Bootstrap 5 via react-bootstrap (no custom design sys
 - [x] **F3. `feat: employees table`**: react-bootstrap `Table` with our own small pagination and sortable-header components (server-side). Loading, empty, error states.
 - [x] **F4. `feat: filters and search bar`**: country, department, job title, status, salary range, debounced text search, URL-synced state.
 - [x] **F5. `feat: employee detail and salary history`**: detail drawer/page with history timeline.
-- [ ] **F6. `feat: create and edit employee form`**: validation mirrors backend, field-level server errors shown.
+- [x] **F6. `feat: create and edit employee form`**: validation mirrors backend, field-level server errors shown.
 - [ ] **F6a. `feat: terminate, rehire, delete and restore actions`**: status chip in the table, terminate dialog (date required), rehire action, delete with confirm, "Deleted" filter view with Restore. Tests for each flow and error messages (for example the email-taken restore error).
 - [ ] **F7. `feat: change salary dialog`**: amount, currency (locked to country), effective date, reason. Optimistic refresh of history.
 - [ ] **F8. `feat: insights dashboard`**: payroll by department, headcount by country, pay distribution shown as tables with Bootstrap progress bars (no chart library up front; add one later only if needed), gender gap, out-of-band and stale lists.

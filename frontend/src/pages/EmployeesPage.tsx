@@ -1,4 +1,5 @@
 import { Alert, Button, Spinner } from 'react-bootstrap'
+import { Link } from 'react-router-dom'
 import { useEmployees } from '../api/employees'
 import CursorPagination from '../features/employees/CursorPagination'
 import EmployeeFilters from '../features/employees/EmployeeFilters'
@@ -20,7 +21,12 @@ export default function EmployeesPage() {
 
   return (
     <>
-      <h1 className="h3 mb-3">Employees</h1>
+      <div className="d-flex align-items-center justify-content-between mb-3">
+        <h1 className="h3 mb-0">Employees</h1>
+        <Link to="/employees/new" className="btn btn-primary">
+          New employee
+        </Link>
+      </div>
 
       <EmployeeFilters
         filters={filters}

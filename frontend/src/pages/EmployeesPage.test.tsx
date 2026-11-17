@@ -84,6 +84,19 @@ describe('EmployeesPage table', () => {
   })
 })
 
+describe('EmployeesPage actions', () => {
+  it('links to the new employee form', async () => {
+    serveEmployees(() => employeeList([asha]))
+    renderWithProviders(<EmployeesPage />)
+    await screen.findByText('Asha Rao')
+
+    expect(screen.getByRole('link', { name: 'New employee' })).toHaveAttribute(
+      'href',
+      '/employees/new',
+    )
+  })
+})
+
 describe('EmployeesPage sorting', () => {
   it('requests name order by default and marks the sorted column', async () => {
     const searches = serveEmployees(() => employeeList([asha]))
