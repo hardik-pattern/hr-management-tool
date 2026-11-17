@@ -6,6 +6,7 @@ RSpec.describe JobTitle, type: :model do
   it { is_expected.to be_valid }
   it { is_expected.to belong_to(:department) }
   it { is_expected.to have_many(:pay_bands).dependent(:restrict_with_error) }
+  it { is_expected.to have_many(:employees).dependent(:restrict_with_error) }
   it { is_expected.to validate_presence_of(:name) }
   it { is_expected.to validate_uniqueness_of(:name).scoped_to(:department_id).case_insensitive }
   it { is_expected.to validate_numericality_of(:level).only_integer.is_in(1..7) }

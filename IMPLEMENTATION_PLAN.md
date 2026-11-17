@@ -217,7 +217,7 @@ Each step ends with: tests green, `bin/rubocop` clean, one commit.
 - [x] **B5. `feat: reference data endpoints`**: `GET /reference/*`, request specs.
 
 ### Phase B-2: Employees and salaries
-- [ ] **B6. `feat: employee and salary record models`**: migrations with all indexes/constraints in section 7, validations (email format, status transitions, `termination_date` only when terminated), associations, specs including DB-constraint specs.
+- [x] **B6. `feat: employee and salary record models`**: migrations with all indexes/constraints in section 7, validations (email format, status transitions, `termination_date` only when terminated), associations, specs including DB-constraint specs.
 - [ ] **B7. `feat: Salaries::Change service`**: appends a `salary_record` and updates the employee's denormalized current salary in one transaction. Rejects non-positive amounts, wrong currency for country, `effective_from` earlier than the latest record. Specs for happy path, rollback on failure, concurrency-safe ordering.
 - [ ] **B8. `feat: Employees::Create service`**: creates employee plus the initial `hire` salary record atomically. Specs.
 - [ ] **B9. `feat: employees CRUD endpoints`**: create, show, update (profile only), terminate. Presenter for JSON. Request specs including validation errors.

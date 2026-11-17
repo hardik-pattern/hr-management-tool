@@ -5,6 +5,7 @@ class JobTitle < ApplicationRecord
 
   belongs_to :department
   has_many :pay_bands, dependent: :restrict_with_error
+  has_many :employees, dependent: :restrict_with_error
 
   validates :name, presence: true, uniqueness: { scope: :department_id, case_sensitive: false }
   validates :level, numericality: { only_integer: true, in: LEVELS }
