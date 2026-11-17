@@ -264,11 +264,11 @@ React + Vite + TypeScript, Bootstrap 5 via react-bootstrap (no custom design sys
 - [x] **F4. `feat: filters and search bar`**: country, department, job title, status, salary range, debounced text search, URL-synced state.
 - [x] **F5. `feat: employee detail and salary history`**: detail drawer/page with history timeline.
 - [x] **F6. `feat: create and edit employee form`**: validation mirrors backend, field-level server errors shown.
-- [ ] **F6a. `feat: terminate, rehire, delete and restore actions`**: status chip in the table, terminate dialog (date required), rehire action, delete with confirm, "Deleted" filter view with Restore. Tests for each flow and error messages (for example the email-taken restore error).
+- [x] **F6a. `feat: terminate, rehire, delete and restore actions`**: status chip in the table, terminate dialog (date required), rehire action, delete with confirm, "Deleted" filter view with Restore. Tests for each flow and error messages (for example the email-taken restore error).
 - [ ] **F7. `feat: change salary dialog`**: amount, currency (locked to country), effective date, reason. Optimistic refresh of history.
-- [ ] **F8. `feat: insights dashboard`**: payroll by department, headcount by country, pay distribution shown as tables with Bootstrap progress bars (no chart library up front; add one later only if needed), gender gap, out-of-band and stale lists.
-- [ ] **F8a. `feat: common questions page`**: one-click list of the catalog questions (from B18a); clicking one runs it and shows the answer table plus the spec used. This is the main "answer questions" surface and needs no AI.
-- [ ] **F9. `feat: analytics explorer`**: pick metric, group-by, filters; results table with inline bars; shows the spec used.
+- [ ] **F8. ON HOLD (depends on Phase B-4): `feat: insights dashboard`**: payroll by department, headcount by country, pay distribution shown as tables with Bootstrap progress bars (no chart library up front; add one later only if needed), gender gap, out-of-band and stale lists.
+- [ ] **F8a. ON HOLD (depends on Phase B-4): `feat: common questions page`**: one-click list of the catalog questions (from B18a); clicking one runs it and shows the answer table plus the spec used. This is the main "answer questions" surface and needs no AI.
+- [ ] **F9. ON HOLD (depends on Phase B-4): `feat: analytics explorer`**: pick metric, group-by, filters; results table with inline bars; shows the spec used.
 - [ ] **F10. ON HOLD with B13: `feat: CSV export button`**: exports the current filter.
 - [ ] **F11. `chore: UX polish and accessibility`**: keyboard navigation, aria labels, responsive layout, empty/error copy.
 
@@ -325,3 +325,29 @@ Settled:
 Open:
 1. Host: undecided, looking at free options; design works with or without a persistent disk (section 3.9). Needed before D2 only.
 2. Natural-language free-text Q&A (section 11): deferred pending your clarification. Not needed before B0.
+
+---
+
+## 16. Deviations and decisions made while building
+
+Where the code differs from what this plan says above, the code is right. Each point names the step it came from.
+
+**On hold (by decision, not dropped):** B13 and F10 (CSV export); Phase B-4 (B14-B19, B18a); F8, F8a, F9 and section 11, which depend on it. `docs/REQUIREMENTS.md` still describes the "answer questions" features and should be revisited if B-4 stays on hold. B13a is covered by the B12 specs.
+
+**Backend**
+- **B3:** `countries` links to `currencies` by a real foreign key (`currency_id`), not a `currency_code` string; `country.currency_code` still works.
+- **B6:** soft delete uses an explicit `Employee.kept` scope, not a `default_scope` (a default scope leaks into joins and raw SQL). The model also enforces that the salary currency is the country's and the job title belongs to the department. `rehire` was added to the salary reasons.
+- **B7:** `Salaries::Change` takes no currency (always the employee's). Future-dated changes and changes for terminated or deleted employees are refused. The `hire` reason is reserved for employee creation.
+- **B8:** the hire record may be dated in the future, so new starters can be entered early. Employee numbers (`E000001`) are derived from the row id.
+- **B9 / B10:** unknown or forbidden fields (status, salary, country, hire date on update; a salary currency) return a 400 rather than being ignored. `StrictParams` and `FindsEmployee` were extracted as concerns.
+- **B9a:** termination cannot be future-dated. Rehire takes an optional new salary.
+- **B11:** seeded history is relative to "today", so the dataset shifts as time passes; the generator takes `today:` for tests. The planted gender gap (4% in six titles) exists only in the fake data.
+- **B12:** keyset pagination as planned, with an id tie-break. A salary range requires `country_id`, because salaries are in local currency; unknown parameters return a 400.
+
+**Frontend**
+- Bootstrap (react-bootstrap) instead of MUI; oxlint (the current Vite template's linter) instead of ESLint.
+- **F3:** the API only moves forward, so the table keeps a stack of cursors in state to go back; sort and page size live in the URL, the page does not. Salary is sortable only once a country is chosen (F4).
+- **F4:** salary amounts are typed in whole currency units and converted to minor units exactly, rounding half up. Clearing the country also removes a salary sort from the URL.
+- **F5:** deleted employees are not linked in the list (the detail API returns 404 for them); they are handled by restore in F6a.
+- **F6:** salary, country and hire date are not editable on the edit form; salary changes come in F7. The form does not claim a salary period (annual or otherwise), since the data does not define one.
+

@@ -1,4 +1,4 @@
-import { Table } from 'react-bootstrap'
+import { Button, Table } from 'react-bootstrap'
 import { Link, useLocation } from 'react-router-dom'
 import type { Employee, EmployeeSort } from '../../api/types'
 import { formatDate } from '../../lib/format'
@@ -13,6 +13,10 @@ interface Props {
   stale?: boolean
   /** Salary can be sorted once a country is chosen, because then it is one currency. */
   salarySortable?: boolean
+  /** When given (in the deleted view), each row gets a Restore button. */
+  onRestore?: (employee: Employee) => void
+  /** The employee being restored right now, if any. */
+  restoringId?: number
 }
 
 export default function EmployeeTable({
@@ -21,6 +25,8 @@ export default function EmployeeTable({
   onSort,
   stale = false,
   salarySortable = false,
+  onRestore,
+  restoringId,
 }: Props) {
   // Handed to the detail page so its Back link returns to this filtered, sorted view.
   const listSearch = useLocation().search
@@ -51,6 +57,7 @@ export default function EmployeeTable({
                 Salary
               </th>
             )}
+            {onRestore && <th scope="col">Actions</th>}
           </tr>
         </thead>
         <tbody>
@@ -76,6 +83,19 @@ export default function EmployeeTable({
                 <StatusBadge status={employee.status} />
               </td>
               <td className="text-end text-nowrap">{employee.salary.formatted}</td>
+              {onRestore && (
+                <td>
+                  <Button
+                    size="sm"
+                    variant="outline-primary"
+                    aria-label={`Restore ${employee.full_name}`}
+                    disabled={restoringId !== undefined}
+                    onClick={() => onRestore(employee)}
+                  >
+                    {restoringId === employee.id ? 'Restoring…' : 'Restore'}
+                  </Button>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

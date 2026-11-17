@@ -1,14 +1,20 @@
+import { useState } from 'react'
 import { Alert, Button, Spinner } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
-import { useEmployees } from '../api/employees'
+import { useEmployees, useRestoreEmployee } from '../api/employees'
 import CursorPagination from '../features/employees/CursorPagination'
 import EmployeeFilters from '../features/employees/EmployeeFilters'
 import EmployeeTable from '../features/employees/EmployeeTable'
 import { useCursorPager } from '../features/employees/useCursorPager'
+import { useFlash } from '../features/employees/useFlash'
 import { useListParams } from '../features/employees/useListParams'
+import { describeError } from '../lib/errors'
 
 export default function EmployeesPage() {
   const list = useListParams()
+  const [flash, setFlash] = useFlash()
+  const [restoreProblem, setRestoreProblem] = useState<string[]>([])
+  const restore = useRestoreEmployee()
   const { sort, perPage, filters, setSort, setPerPage } = list
   // Any change to the view starts again from the first page.
   const pager = useCursorPager(JSON.stringify({ sort, perPage, filters }))
@@ -19,6 +25,15 @@ export default function EmployeesPage() {
     cursor: pager.cursor,
   })
 
+  const restoreEmployee = (target: { id: number; name: string }) => {
+    setRestoreProblem([])
+    restore.mutate(target.id, {
+      onSuccess: () => setFlash({ notice: `Restored ${target.name}.` }),
+      onError: (failure) =>
+        setRestoreProblem([`Could not restore ${target.name}.`, ...describeError(failure)]),
+    })
+  }
+
   return (
     <>
       <div className="d-flex align-items-center justify-content-between mb-3">
@@ -27,6 +42,29 @@ export default function EmployeesPage() {
           New employee
         </Link>
       </div>
+
+      {(flash.notice || flash.undo) && (
+        <Alert variant="success" dismissible role="status" onClose={() => setFlash({})}>
+          {flash.undo ? `Deleted ${flash.undo.name}. ` : flash.notice}
+          {flash.undo && (
+            <Button
+              variant="link"
+              className="p-0 align-baseline"
+              disabled={restore.isPending}
+              onClick={() => flash.undo && restoreEmployee(flash.undo)}
+            >
+              Undo
+            </Button>
+          )}
+        </Alert>
+      )}
+      {restoreProblem.length > 0 && (
+        <Alert variant="danger" dismissible role="alert" onClose={() => setRestoreProblem([])}>
+          {restoreProblem.map((line) => (
+            <div key={line}>{line}</div>
+          ))}
+        </Alert>
+      )}
 
       <EmployeeFilters
         filters={filters}
@@ -68,6 +106,12 @@ export default function EmployeesPage() {
           onSort={setSort}
           stale={isPlaceholderData}
           salarySortable={list.salarySortable}
+          onRestore={
+            filters.deleted === 'only'
+              ? (employee) => restoreEmployee({ id: employee.id, name: employee.full_name })
+              : undefined
+          }
+          restoringId={restore.isPending ? restore.variables : undefined}
         />
       )}
 

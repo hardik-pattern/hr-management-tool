@@ -1,20 +1,26 @@
+import { useState } from 'react'
 import { Alert, Button, Spinner } from 'react-bootstrap'
-import { Link, useLocation, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useEmployee } from '../api/employees'
 import { useSalaryRecords } from '../api/salary'
+import DeleteDialog from '../features/employees/DeleteDialog'
 import EmployeeProfile from '../features/employees/EmployeeProfile'
+import RehireDialog from '../features/employees/RehireDialog'
+import TerminateDialog from '../features/employees/TerminateDialog'
+import { useFlash } from '../features/employees/useFlash'
 import SalaryHistory from '../features/employees/SalaryHistory'
 
 /** What the list passes along so Back returns to the same filtered, sorted view. */
 export interface ListLocationState {
   listSearch?: string
-  /** A one-off message from the page that sent us here, such as "Employee created." */
-  notice?: string
 }
 
 export default function EmployeeDetailPage() {
   const params = useParams()
   const state = useLocation().state as ListLocationState | null
+  const navigate = useNavigate()
+  const [flash, setFlash] = useFlash()
+  const [dialog, setDialog] = useState<'terminate' | 'rehire' | 'delete' | null>(null)
   const id = /^[1-9]\d*$/.test(params.id ?? '') ? Number(params.id) : undefined
 
   const employee = useEmployee(id)
@@ -62,19 +68,66 @@ export default function EmployeeDetailPage() {
 
       {employee.data && (
         <>
-          {state?.notice && (
-            <Alert variant="success" dismissible role="status">
-              {state.notice}
+          {flash.notice && (
+            <Alert variant="success" dismissible role="status" onClose={() => setFlash({})}>
+              {flash.notice}
             </Alert>
           )}
-          <div className="d-flex align-items-center justify-content-between mb-4">
+          <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
             <h1 className="h3 mb-0">{employee.data.full_name}</h1>
-            <Link to={`/employees/${employee.data.id}/edit`} className="btn btn-outline-primary">
-              Edit
-            </Link>
+            <div className="d-flex gap-2">
+              <Link to={`/employees/${employee.data.id}/edit`} className="btn btn-outline-primary">
+                Edit
+              </Link>
+              {employee.data.status === 'active' ? (
+                <Button variant="outline-secondary" onClick={() => setDialog('terminate')}>
+                  Terminate
+                </Button>
+              ) : (
+                <Button variant="outline-secondary" onClick={() => setDialog('rehire')}>
+                  Rehire
+                </Button>
+              )}
+              <Button variant="outline-danger" onClick={() => setDialog('delete')}>
+                Delete
+              </Button>
+            </div>
           </div>
           <EmployeeProfile employee={employee.data} latestRecord={history.data?.[0]} />
           <SalaryHistory history={history} />
+
+          {dialog === 'terminate' && (
+            <TerminateDialog
+              employee={employee.data}
+              onClose={() => setDialog(null)}
+              onDone={(notice) => {
+                setDialog(null)
+                setFlash({ notice })
+              }}
+            />
+          )}
+          {dialog === 'rehire' && (
+            <RehireDialog
+              employee={employee.data}
+              onClose={() => setDialog(null)}
+              onDone={(notice) => {
+                setDialog(null)
+                setFlash({ notice })
+              }}
+            />
+          )}
+          {dialog === 'delete' && (
+            <DeleteDialog
+              employee={employee.data}
+              onClose={() => setDialog(null)}
+              onDone={() =>
+                // Back to the list the employee was opened from, with a one-click way to undo.
+                navigate(`/employees${state?.listSearch ?? ''}`, {
+                  state: { undo: { id: employee.data.id, name: employee.data.full_name } },
+                })
+              }
+            />
+          )}
         </>
       )}
     </>

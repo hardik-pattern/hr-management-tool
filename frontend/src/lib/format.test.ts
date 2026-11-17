@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatDate } from './format'
+import { formatDate, todayIso } from './format'
 
 describe('formatDate', () => {
   it('formats an ISO date', () => {
@@ -20,5 +20,16 @@ describe('formatDate', () => {
     expect(formatDate(undefined)).toBe('—')
     expect(formatDate('')).toBe('—')
     expect(formatDate('not a date')).toBe('—')
+  })
+})
+
+describe('todayIso', () => {
+  it('is the UTC date', () => {
+    expect(todayIso(new Date('2025-06-15T23:30:00Z'))).toBe('2025-06-15')
+    expect(todayIso(new Date('2025-06-16T00:30:00Z'))).toBe('2025-06-16')
+  })
+
+  it('defaults to now', () => {
+    expect(todayIso()).toMatch(/^\d{4}-\d{2}-\d{2}$/)
   })
 })

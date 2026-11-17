@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import type { ApiError } from '../../api/ApiError'
 import { useCountries, useCurrencies, useDepartments, useJobTitles } from '../../api/reference'
 import type { Employee } from '../../api/types'
-import { formatDate } from '../../lib/format'
+import { formatDate, todayIso } from '../../lib/format'
 import { GENDER_LABELS } from '../../lib/labels'
 import {
   type FormErrors,
@@ -25,8 +25,6 @@ interface Props {
   onSubmit: (values: FormValues, exponent: number) => void
   cancelTo: string
 }
-
-const todayIso = () => new Date().toISOString().slice(0, 10)
 
 export default function EmployeeForm(props: Props) {
   const { mode, initialValues, employee, submitting, serverError, onSubmit, cancelTo } = props
