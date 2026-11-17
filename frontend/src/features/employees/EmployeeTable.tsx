@@ -1,4 +1,5 @@
 import { Table } from 'react-bootstrap'
+import { Link, useLocation } from 'react-router-dom'
 import type { Employee, EmployeeSort } from '../../api/types'
 import { formatDate } from '../../lib/format'
 import SortableHeader from './SortableHeader'
@@ -21,6 +22,9 @@ export default function EmployeeTable({
   stale = false,
   salarySortable = false,
 }: Props) {
+  // Handed to the detail page so its Back link returns to this filtered, sorted view.
+  const listSearch = useLocation().search
+
   return (
     <div className="table-responsive">
       <Table hover aria-busy={stale} className={stale ? 'opacity-50' : undefined}>
@@ -54,7 +58,14 @@ export default function EmployeeTable({
             <tr key={employee.id}>
               <td className="text-nowrap">{employee.employee_number}</td>
               <td>
-                {employee.full_name}
+                {employee.deleted_at ? (
+                  // A deleted employee cannot be opened; the API answers 404 for them.
+                  <span className="text-body-secondary">{employee.full_name} (deleted)</span>
+                ) : (
+                  <Link to={`/employees/${employee.id}`} state={{ listSearch }}>
+                    {employee.full_name}
+                  </Link>
+                )}
                 <div className="small text-body-secondary">{employee.email}</div>
               </td>
               <td>{employee.department.name}</td>
