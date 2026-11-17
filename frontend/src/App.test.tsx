@@ -1,17 +1,30 @@
 import { render, screen } from '@testing-library/react'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import App from './App'
+import { createWrapper } from './test/queryWrapper'
+import { employeeList } from './test/fixtures'
+import { server } from './test/server'
 
 function renderAt(path: string) {
+  const { queryClient } = createWrapper()
   return render(
-    <MemoryRouter initialEntries={[path]}>
-      <App />
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={[path]}>
+        <App />
+      </MemoryRouter>
+    </QueryClientProvider>,
   )
 }
 
 describe('App shell', () => {
+  // The employees page loads its list on arrival.
+  beforeEach(() => {
+    server.use(http.get('/api/v1/employees', () => HttpResponse.json(employeeList([]))))
+  })
+
   it('shows the brand and the main navigation', () => {
     renderAt('/employees')
 

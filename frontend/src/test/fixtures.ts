@@ -36,3 +36,14 @@ export function buildSalaryRecord(overrides: Partial<SalaryRecord> = {}): Salary
 export function errorBody(code: string, message: string, details?: Record<string, string[]>) {
   return { error: { code, message, ...(details ? { details } : {}) } }
 }
+
+/** A list response, as GET /employees returns it. */
+export function employeeList(
+  employees: Employee[],
+  meta: Partial<{ total: number; per_page: number; next_cursor: string | null }> = {},
+) {
+  return {
+    data: employees,
+    meta: { total: employees.length, per_page: 25, next_cursor: null, ...meta },
+  }
+}
