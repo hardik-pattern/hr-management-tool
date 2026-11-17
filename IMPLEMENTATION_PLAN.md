@@ -212,7 +212,7 @@ Each step ends with: tests green, `bin/rubocop` clean, one commit.
 - [x] **B2. `feat: add error handling and JSON envelope`**: `ApplicationController` rescues (`RecordNotFound` -> 404, `RecordInvalid` -> 422, param errors -> 400) into the standard envelope. Request specs.
 
 ### Phase B-1: Reference data
-- [ ] **B3. `feat: currencies and countries`**: migrations, models, validations, factories, specs. Money helper `Money.format(cents, currency)` with exponent handling (JPY=0, USD=2), plus `to_usd_cents`. Unit tests for rounding.
+- [x] **B3. `feat: currencies and countries`**: migrations, models, validations, factories, specs. Money helper `Money.format(cents, currency)` with exponent handling (JPY=0, USD=2), plus `to_usd_cents`. Unit tests for rounding.
 - [ ] **B4. `feat: departments, job titles and pay bands`**: migrations with CHECK constraints, models, validations (`min <= max`, uniqueness), specs.
 - [ ] **B5. `feat: reference data endpoints`**: `GET /reference/*`, request specs.
 
