@@ -9,6 +9,9 @@ Rails.application.routes.draw do
           post :rehire
           post :restore
         end
+
+        resources :salary_changes, only: :create
+        resources :salary_records, only: :index
       end
 
       scope :reference, controller: :reference, as: :reference do

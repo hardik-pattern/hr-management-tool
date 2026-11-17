@@ -222,7 +222,7 @@ Each step ends with: tests green, `bin/rubocop` clean, one commit.
 - [x] **B8. `feat: Employees::Create service`**: creates employee plus the initial `hire` salary record atomically. Specs.
 - [x] **B9. `feat: employees CRUD endpoints`**: create, show, update (profile only), terminate. Presenter for JSON. Request specs including validation errors.
 - [x] **B9a. `feat: terminate, rehire, soft delete and restore`**: `Employees::Terminate`, `Employees::Rehire`, `Employees::SoftDelete`, `Employees::Restore` services. Rules: termination date required and not before hire date; cannot terminate twice; cannot change salary of a terminated or deleted employee; restore fails if the email is now taken by another kept employee (clear 422). Default scope `Employee.kept`. Endpoints per section 8. Specs for each transition, partial-unique-email behavior, and that salary history survives all of them.
-- [ ] **B10. `feat: salary change and history endpoints`**: `POST salary_changes`, `GET salary_records`. Request specs.
+- [x] **B10. `feat: salary change and history endpoints`**: `POST salary_changes`, `GET salary_records`. Request specs.
 
 ### Phase B-3: Listing at scale
 - [ ] **B11. `feat: seed 10,000 employees`**: `db/seeds.rb` plus `Seeds::EmployeeGenerator` (fixed RNG seed, realistic salary distributions per country and level, pay bands generated per title/country, a deliberate few out-of-band and stale cases for the insights, about 8% terminated with valid dates, and a handful of soft-deleted rows). `insert_all` in batches. Spec for the generator's determinism and distributions on a small N. Record seed duration in `docs/PERFORMANCE.md`.
