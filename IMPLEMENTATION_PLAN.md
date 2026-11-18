@@ -289,9 +289,9 @@ Open question: provider (Pattern's Bifrost gateway or another). Skipped entirely
 
 ## 12. Deployment and artifacts
 
-- [ ] **D1. `chore: Dockerfile and single-service build`**: multi-stage: build React, copy into Rails `public/`, serve both.
-- [ ] **D2. `chore: deploy`**: deploy to the free host chosen by then, with boot-time migrate and seed-if-empty, health check wired. Put the live URL and the ephemeral-data caveat (if any) in `README.md`.
-- [ ] **D3. `docs: README and final artifacts`**: setup, run, test, deploy instructions.
+- [ ] **D1. NOT IN SCOPE for this build (user decision, development only): `chore: Dockerfile and single-service build`**: multi-stage: build React, copy into Rails `public/`, serve both.
+- [ ] **D2. NOT IN SCOPE for this build (user decision, development only): `chore: deploy`**: deploy to the free host chosen by then, with boot-time migrate and seed-if-empty, health check wired. Put the live URL and the ephemeral-data caveat (if any) in `README.md`.
+- [x] **D3. `docs: README and final artifacts`**: setup, run and test instructions (deployment instructions are left out with D1/D2). The README steps were followed in a fresh clone to check them. Artifacts under `docs/`: REQUIREMENTS, ARCHITECTURE, DESIGN_NOTES, API, PERFORMANCE, AI_PROMPTS.
 
 Artifacts committed under `docs/`:
 - `REQUIREMENTS.md` (one page)
@@ -350,4 +350,10 @@ Where the code differs from what this plan says above, the code is right. Each p
 - **F4:** salary amounts are typed in whole currency units and converted to minor units exactly, rounding half up. Clearing the country also removes a salary sort from the URL.
 - **F5:** deleted employees are not linked in the list (the detail API returns 404 for them); they are handled by restore in F6a.
 - **F6:** salary, country and hire date are not editable on the edit form; salary changes come in F7. The form does not claim a salary period (annual or otherwise), since the data does not define one.
+
+**Late steps (B20, F11, D3)**
+- **B20:** unparseable bodies and unexpected failures now answer in the API's JSON error shape (no exception text); bodies over 64 KB (`MAX_REQUEST_BYTES`) get a 413; CORS is opt-in through `CORS_ORIGINS`; the terminate, rehire, delete and restore endpoints refuse unknown parameters; Rails' automatic parameter wrapping is off. `docs/API.md` is generated from real calls.
+- **F11:** an axe audit of every screen found the dialogs had no accessible name (fixed). Beyond what axe checks: errors are tied to fields (`aria-invalid`, `aria-describedby`), focus moves to the first problem, there is a skip link, per-page titles and focus after navigation, the Restore column stays reachable when the table scrolls, and there is a real favicon.
+- **D3:** deployment instructions are not included, because D1 and D2 are out of scope for this build.
+- **API detail:** a plain salary change refuses only the `hire` reason. `rehire` is accepted by the API; the UI does not offer it because the Rehire action records it.
 

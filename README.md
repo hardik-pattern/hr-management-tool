@@ -13,7 +13,7 @@ Not built yet: answering pay questions across the organisation (analytics) and C
 
 ## Run it
 
-You need **Ruby 3.3.6** (see `backend/.ruby-version`) and **Node 22 or newer**. SQLite comes with Rails; there is nothing else to install.
+You need **Ruby 3.3.6** (see `backend/.ruby-version`) and **Node 22.12 or newer** (22, 24 or 26, the releases Vitest supports). SQLite comes with Rails; there is nothing else to install.
 
 ```bash
 # 1. Backend: create the database and load 10,000 employees (about 3 seconds)
