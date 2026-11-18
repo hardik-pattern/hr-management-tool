@@ -87,8 +87,9 @@ Plain Rails, with the logic pulled out of controllers into small, named pieces.
 | Concerns | `app/controllers/concerns` | `ErrorHandling` (one error shape), `StrictParams` (refuse unknown keys), `FindsEmployee`. |
 | Services | `app/services` | Every write. `Employees::Create`, `Terminate`, `Rehire`, `SoftDelete`, `Restore`; `Salaries::Change`. Each is one transaction and raises `RecordInvalid` on a broken rule. |
 | Queries | `app/queries` | Reads. `EmployeeSearch`: filters, sorting, keyset pagination. |
+| Analytics | `app/services/analytics`, `app/services/questions` | Pay figures, computed on request. `Spec` (a validated question), `QueryEngine`, `Percentile`; the insights `GenderPayGap`, `OutOfBand`, `StaleSalaries`; and the fixed `Questions::Catalog` that names the common questions. |
 | Models | `app/models` | Validations and relationships; `Money` is a small value object. |
-| Presenters | `app/presenters` | Shape JSON for employees and salary records. |
+| Presenters | `app/presenters` | Shape JSON for employees, salary records and each kind of analytics result. |
 | Edge | `lib/middleware`, `config/initializers` | Request size limit, opt-in CORS. `app/errors` holds the JSON exceptions app. |
 | Seeding | `app/services/seeds`, `db/seeds.rb` | Reference data and the reproducible 10,000-employee generator. |
 
@@ -112,6 +113,22 @@ sequenceDiagram
   Note over S,DB: a broken rule raises, nothing is written, the API answers 422
 ```
 
+## Pay analytics
+
+One path serves the dashboard, the Questions page and the Explorer, so a figure is the same wherever it appears.
+
+```mermaid
+flowchart LR
+  Q["A catalog question,<br/>or choices in the Explorer"] --> S["Analytics::Spec<br/>validated against whitelists"]
+  S --> E["QueryEngine<br/>filter, convert to USD,<br/>group, measure"]
+  E --> P["Presenter<br/>adds formatted amounts"]
+  P --> UI["Table, bars, plain-words<br/>statement of what was asked"]
+```
+
+- **Exact and comparable.** Each salary is converted to USD cents with the same half-up `Money` arithmetic used everywhere, then grouped and measured in Ruby, with percentiles by linear interpolation. See `DESIGN_NOTES.md` for why this is not done in SQL.
+- **Questions are definitions, not guesses.** A catalog question is a fixed name plus the exact parameters it runs, so it always means the same calculation.
+- **The like-for-like gender gap** compares women with men in the same job title and country, then combines those comparisons, and flags results that rest on few people.
+
 ## Frontend (`frontend/src`)
 
 | Folder | Role |
@@ -120,6 +137,7 @@ sequenceDiagram
 | `pages/` | One component per route: list, detail, create, edit, not found. |
 | `features/employees/` | The pieces the pages are built from: table, filters, forms, dialogs, and the hooks for URL state and paging. |
 | `lib/` | Pure helpers: money parsing, formatting, labels, error wording. |
+| `features/analytics/` | The pay screens' pieces: the table with bars, the gender-gap and finding lists, the Explorer's controls and its address handling. |
 | `components/` | The layout shell: navigation, skip link, focus handling. |
 | `test/` | Shared test infrastructure: MSW server, fixtures, render helpers, the axe check. |
 
@@ -127,11 +145,11 @@ sequenceDiagram
 
 ## Quality
 
-- **Backend:** 323 specs, about 99.8% line and 99.3% branch coverage, rubocop, Brakeman and bundler-audit clean.
-- **Frontend:** 326 tests (components, hooks, flows, and an accessibility audit of every screen), lint and format clean, type-checked build.
+- **Backend:** 482 specs, about 99.9% line and 98.9% branch coverage, rubocop, Brakeman and bundler-audit clean.
+- **Frontend:** 452 tests (components, hooks, flows, and an accessibility audit of every screen), lint and format clean, type-checked build.
 - **CI:** two workflows in `.github/workflows` run the above on each push and pull request.
 - **Performance:** measurements are in `PERFORMANCE.md`; a list page takes a few milliseconds on 10,000 rows.
 
 ## Boundaries
 
-On hold, not built: answering pay questions (analytics, curated questions) and the screens for it, CSV export. Not covered: authentication, deployment. See `DESIGN_NOTES.md` ("Not built, on purpose") and `IMPLEMENTATION_PLAN.md`.
+On hold, not built: CSV export and a free-text question box. Not covered: authentication, deployment. See `DESIGN_NOTES.md` ("Not built, on purpose") and `IMPLEMENTATION_PLAN.md`.

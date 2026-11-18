@@ -7,9 +7,10 @@ A web app for an HR manager to manage salary data for about 10,000 employees acr
 - **Find people:** search by name, email or number; filter by country, department, job title, status and (within a country) salary range; sort; page through 10,000 rows quickly. Every view has a shareable URL.
 - **See a person:** profile, current salary, and the full salary history with each change as a percentage.
 - **Manage them:** create and edit employees; change a salary (with a reason and a start date, added to the history, never overwritten); terminate and rehire; delete a mistaken record and restore it. Salaries are held in each employee's own currency.
+- **Understand pay:** an Insights dashboard (payroll, headcount, pay by level, the gender pay gap, who is paid outside their band, who has gone longest without a salary change); a Questions page with the seven questions an HR manager asks most, each answered in one click; and an Explorer to ask your own (choose a measure, group it up to two ways, filter who is included). Every figure is computed from the data, in US dollars so countries compare, and states exactly how it was worked out.
 - **Trust the data:** every rule is enforced in the app and again in the database, and salary history cannot be edited.
 
-Not built yet: answering pay questions across the organisation (analytics) and CSV export. Both are on hold by decision. Authentication is out of scope (a single HR user), and deployment is not covered. See [docs/DESIGN_NOTES.md](docs/DESIGN_NOTES.md).
+Not built: CSV export and a free-text question box, both on hold by decision. Authentication is out of scope (a single HR user), and deployment is not covered. See [docs/DESIGN_NOTES.md](docs/DESIGN_NOTES.md).
 
 ## Run it
 
@@ -36,11 +37,11 @@ Open <http://localhost:5173>. In development Vite forwards `/api` to the Rails s
 
 ```bash
 cd backend
-bundle exec rspec             # 323 specs
+bundle exec rspec             # 482 specs
 bin/rubocop && bin/brakeman && bin/bundler-audit
 
 cd ../frontend
-npm test                      # 326 tests, including an accessibility audit of every screen
+npm test                      # 452 tests, including an accessibility audit of every screen
 npm run lint && npm run format:check && npm run build
 ```
 

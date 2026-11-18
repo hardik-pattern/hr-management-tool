@@ -25,6 +25,7 @@ Set before the work began (the human's global preferences for the agent):
 | "I want to hold the csv for now rest complete everything" / "do not do Phase B-4 ... we are holding it not dropping" | CSV export and the pay-analytics phase were put **on hold**, marked as such in the plan, and not built. |
 | "have you updated the plan too?" | A check of the plan against reality, which found it had fallen behind (see below). |
 | "lets complete everything and commit without asking, just do the development part not deployment" | The remaining development steps were committed directly; deployment and the on-hold items were left alone. |
+| "Yes, build analytics" (answering "Should I build the on-hold pay analytics next?") | The held phase was built end to end: the percentile helper, the query engine, the summary endpoint, the like-for-like gender pay gap, the band and stale-salary insights, the question catalog, the dashboard, the Questions page and the Explorer. CSV export and the free-text question box stayed on hold. |
 
 ## Method, per step
 
@@ -32,8 +33,9 @@ Set before the work began (the human's global preferences for the agent):
 2. **Write the code and the tests together**, in small units.
 3. **Run everything**: tests, linters, type check, build.
 4. **Try to break it.** For the behaviours that matter, deliberately break the code (remove a check, send the wrong unit, skip a reset) and confirm the right tests turn red, then restore it. A test that has never failed has not been shown to test anything.
-5. **Use the real thing.** Run the app against the seeded 10,000 employees in a browser, and call the real API, rather than trusting mocks alone.
-6. **Report honestly**: what was built, what was checked, what was not, then commit.
+5. **Check numbers independently.** For anything that reports a figure, recompute it with different code from the raw data and compare. The analytics were recomputed in a separate script that reads the SQLite file directly, with its own currency conversion and percentile code, and every group and total matched.
+6. **Use the real thing.** Run the app against the seeded 10,000 employees in a browser, and call the real API, rather than trusting mocks alone.
+7. **Report honestly**: what was built, what was checked, what was not, then commit.
 
 ## Where the AI was wrong, and how it was caught
 
@@ -51,6 +53,16 @@ Listing these is deliberate; they are the evidence that the checks above did rea
 - **A shell slip.** A stray `cat > file` blocked waiting for input and had already emptied `Layout.tsx`. Noticed at once, restored from git, and the intended edit redone.
 - **A plan that drifted.** The human asked whether the plan had been updated. It had not: dependent steps were not marked on hold, and decisions made while building lived only in commit messages. Fixed in a new section of the plan that lists each departure from it.
 - **A faulty assumption while debugging.** Investigating one unexpected salary record, the agent assumed new records had ids above the seed's count, which was wrong after repeated seeding. It went to the request log instead, which showed the record came from a request the agent had not made. Most likely the human was testing the app at the same time, but that was never confirmed. The record was left alone and reported.
+
+### While building the analytics
+
+- **Engine bugs found by the first specs.** `headcount` returned a placeholder 0 as its value, and a question with no grouping returned one row with an empty group instead of only the total. Both were fixed in the code.
+- **Test arithmetic that was wrong, not the code.** A mistyped constant (`6_700_000_0`), a weighted gap worked out as -6.67% when 3 women at 0% and 3 at -20% give -10%, and a "last year" window expected to contain nobody when it contained one leaver. Each was checked by hand before changing the test, and in each the code was right.
+- **Wording bugs found by writing tests.** The gender-gap headline read "Women are paid not enough data to compare than men" when there was no figure, and a zero gap would have read "Women are paid no difference than men". The sentence was rewritten so it is grammatical in every case, instead of a test enshrining the broken one.
+- **A real-data surprise, handled openly.** On the seeded data the first-ranked job title showed a -16.7% gap resting on four women. Rather than pick a threshold that hid it, the sample size is shown and a gap resting on fewer than 20 women is flagged, so a reader is not misled by a number that looks as solid as the rest.
+- **Layout problems only the real page showed.** A headline figure broke mid-number ("489,992,744.8 / 7 USD"), the gender-gap card wrapped a sentence into four lines, and two employee tables were squeezed into half-width cards with clipped columns. The first attempt to widen the tables did not apply (formatting had changed the line it targeted), which was only noticed on the next screenshot.
+- **A fragile component.** The pay-by-level table crashed the whole page when a test's mock returned rows of the wrong shape. The mock was wrong, but the component was hardened so one unexpected row is skipped.
+- **Edits that silently did not apply.** Several scripted edits matched nothing because the formatter had reflowed the target lines. Failing tests, a type check or a visual check caught each, which is why the method asserts that an edit applied and re-runs everything afterwards.
 
 ## What this does not claim
 

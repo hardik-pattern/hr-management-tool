@@ -229,7 +229,7 @@ Each step ends with: tests green, `bin/rubocop` clean, one commit.
 - [x] **B12. `feat: employee search, filter, sort, pagination`**: `EmployeeSearch` query object. Filters: q, country, department, job_title, status, salary range. Sort whitelist. Keyset pagination with `per_page` cap. Specs per filter and combination, plus an N+1 guard spec (query count assertion).
 - [ ] **B13. ON HOLD (user decision): `feat: CSV export`**: streamed CSV of the filtered set. Spec for headers, escaping, and large-set streaming.
 
-### Phase B-4: Answering questions (ON HOLD, user decision: not building yet)
+### Phase B-4: Answering questions (BUILT; see section 16)
 - [x] **B13a. `test: deleted and terminated rows excluded from listings by default`**: covered by the B12 specs for `EmployeeSearch` (defaults, status, deleted=only); the CSV half returns with B13 if it is resumed. Original scope: regression specs on `EmployeeSearch` and CSV: deleted never shown unless `deleted=only`; terminated shown only via `status`.
 - [x] **B14. `feat: percentile helper`**: `Analytics::Percentile` (window-function SQL, with Ruby fallback if needed). Edge-case specs: empty set, one row, even/odd counts, ties.
 - [x] **B15. `feat: analytics query engine`**: `Analytics::QueryEngine` taking a validated `Analytics::Spec` (whitelisted metric/group_by/filters, rejects anything else). USD normalization. Specs for every metric and group_by, empty groups, mixed currencies, default `active` scope, `status=all`, and soft-deleted rows never counted.
@@ -267,7 +267,7 @@ React + Vite + TypeScript, Bootstrap 5 via react-bootstrap (no custom design sys
 - [x] **F6a. `feat: terminate, rehire, delete and restore actions`**: status chip in the table, terminate dialog (date required), rehire action, delete with confirm, "Deleted" filter view with Restore. Tests for each flow and error messages (for example the email-taken restore error).
 - [x] **F7. `feat: change salary dialog`**: amount, currency (locked to country), effective date, reason. Optimistic refresh of history.
 - [x] **F8. `feat: insights dashboard`**: payroll by department, headcount by country, pay distribution shown as tables with Bootstrap progress bars (no chart library up front; add one later only if needed), gender gap, out-of-band and stale lists.
-- [x] **F8a. ON HOLD (depends on Phase B-4): `feat: common questions page`**: one-click list of the catalog questions (from B18a); clicking one runs it and shows the answer table plus the spec used. This is the main "answer questions" surface and needs no AI.
+- [x] **F8a. `feat: common questions page`**: one-click list of the catalog questions (from B18a); clicking one runs it and shows the answer table plus the spec used. This is the main "answer questions" surface and needs no AI.
 - [x] **F9. `feat: analytics explorer`**: pick metric, group-by, filters; results table with inline bars; shows the spec used.
 - [ ] **F10. ON HOLD with B13: `feat: CSV export button`**: exports the current filter.
 - [x] **F11. `chore: UX polish and accessibility`**: keyboard navigation, aria labels, responsive layout, empty/error copy.
@@ -332,7 +332,7 @@ Open:
 
 Where the code differs from what this plan says above, the code is right. Each point names the step it came from.
 
-**On hold (by decision, not dropped):** B13 and F10 (CSV export); Phase B-4 (B14-B19, B18a); F8, F8a, F9 and section 11, which depend on it. `docs/REQUIREMENTS.md` still describes the "answer questions" features and should be revisited if B-4 stays on hold. B13a is covered by the B12 specs.
+**On hold (by decision, not dropped):** B13 and F10 (CSV export) and section 11 (the optional free-text question box, Q1-Q4). Phase B-4 (B14-B19, B18a) and F8, F8a and F9 were on hold earlier and have since been built.
 
 **Backend**
 - **B3:** `countries` links to `currencies` by a real foreign key (`currency_id`), not a `currency_code` string; `country.currency_code` still works.
@@ -356,4 +356,13 @@ Where the code differs from what this plan says above, the code is right. Each p
 - **F11:** an axe audit of every screen found the dialogs had no accessible name (fixed). Beyond what axe checks: errors are tied to fields (`aria-invalid`, `aria-describedby`), focus moves to the first problem, there is a skip link, per-page titles and focus after navigation, the Restore column stays reachable when the table scrolls, and there is a real favicon.
 - **D3:** deployment instructions are not included, because D1 and D2 are out of scope for this build.
 - **API detail:** a plain salary change refuses only the `hire` reason. `rehire` is accepted by the API; the UI does not offer it because the Rehire action records it.
+
+**Answering pay questions (B14 to B19, B18a, F8, F8a, F9)**
+- **Order:** the questions page (F8a) was built before the dashboard (F8), because it exercises every kind of result the dashboard reuses.
+- **Aggregation is in Ruby, not SQL** (the plan said SQL). The engine reads the filtered rows once, converts each salary to USD with `Money`, then groups and measures. SQLite has no percentile function and floating-point SQL would not round like `Money`; at 10,000 rows it takes 18 to 102 ms. See `docs/DESIGN_NOTES.md`.
+- **Added to the engine beyond the plan:** an `iqr` measure (75th minus 25th percentile), needed for "widest pay spread", and a `terminated_after` filter, needed for "what did leavers earn in the last year". Groupings go up to two, which the questions and the Explorer need.
+- **The gender pay gap compares like with like** (same job title and country, weighted by the number of women), shows the raw gap beside it, and flags a gap resting on fewer than 20 women as a small sample. This was added after the real data showed a -16.7% gap resting on four women.
+- **Insight lists are capped** (50 by default, 200 at most) with the full total reported, and the questions are a fixed catalog (`GET /questions`, `GET /questions/:id/answer`) rather than a free-text endpoint, which stays on hold.
+- **No new index was needed** (B19): the plans use the existing indexes, and a spec reads the real query plans and fails if one goes missing.
+- **Dashboard:** headline cards show short figures ($490M, $48,708) with the exact amount beside them, and the two employee lists use the full width; both came from looking at the real page.
 

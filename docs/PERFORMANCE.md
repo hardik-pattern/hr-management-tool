@@ -115,8 +115,9 @@ No new index was needed: the ones from the data model already cover these. The s
 
 ## Test suite
 
-The whole backend suite runs in about 10 seconds.
-The seeding specs run in about 4 seconds of that: read-only specs about a
-3,000-employee dataset share one dataset per group (created once, removed
-afterwards) instead of regenerating it for every example, which took the
-seeding specs from about 19 s to about 4 s.
+| Suite | Size | Time |
+|---|---|---|
+| Backend (RSpec) | 482 specs, 99.9% line and 98.9% branch coverage | about 12 seconds |
+| Frontend (Vitest) | 452 tests in 37 files | about 11 seconds |
+
+Large datasets are not rebuilt per example: read-only specs about a 3,000-employee dataset share one dataset per group (created once, removed afterwards), which took the seeding specs from about 19 seconds to about 4.
