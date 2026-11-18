@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatDate, todayIso } from './format'
+import { formatDate, formatDuration, todayIso } from './format'
 
 describe('formatDate', () => {
   it('formats an ISO date', () => {
@@ -31,5 +31,19 @@ describe('todayIso', () => {
 
   it('defaults to now', () => {
     expect(todayIso()).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+  })
+})
+
+describe('formatDuration', () => {
+  it.each([
+    [0, '0 months'],
+    [1, '1 month'],
+    [7, '7 months'],
+    [12, '1 year'],
+    [13, '1 year 1 month'],
+    [24, '2 years'],
+    [112, '9 years 4 months'],
+  ])('%i months reads as "%s"', (months, expected) => {
+    expect(formatDuration(months)).toBe(expected)
   })
 })

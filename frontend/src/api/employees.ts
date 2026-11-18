@@ -31,14 +31,19 @@ export function useEmployee(id: number | undefined) {
 
 /**
  * A mutation that changes an employee. Every change refreshes everything
- * under ['employees'] (lists, details, salary histories), which is simpler
- * and safer than patching each cache entry by hand.
+ * under ['employees'] (lists, details, salary histories) and the pay figures
+ * under ['analytics'], which is simpler and safer than patching each cache
+ * entry by hand.
  */
 function useEmployeeMutation<TVariables>(call: (variables: TVariables) => Promise<Employee>) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: call,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.employees.all }),
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.employees.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all }),
+      ]),
   })
 }
 

@@ -24,3 +24,12 @@ export function formatDate(isoDate: string | null | undefined): string {
 export function todayIso(now: Date = new Date()): string {
   return now.toISOString().slice(0, 10)
 }
+
+/** 112 -> "9 years 4 months", 7 -> "7 months", 12 -> "1 year". */
+export function formatDuration(months: number): string {
+  const years = Math.floor(months / 12)
+  const rest = months % 12
+  const plural = (n: number, unit: string) => `${n} ${unit}${n === 1 ? '' : 's'}`
+  if (years === 0) return plural(rest, 'month')
+  return rest === 0 ? plural(years, 'year') : `${plural(years, 'year')} ${plural(rest, 'month')}`
+}

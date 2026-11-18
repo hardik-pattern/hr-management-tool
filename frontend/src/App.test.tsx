@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router-dom'
@@ -30,7 +30,14 @@ describe('App shell', () => {
 
     expect(screen.getByRole('link', { name: 'ACME Salary Manager' })).toBeInTheDocument()
     const nav = screen.getByRole('navigation', { name: 'Main' })
-    expect(nav).toHaveTextContent('Employees')
+    expect(within(nav).getByRole('link', { name: 'Employees' })).toHaveAttribute(
+      'href',
+      '/employees',
+    )
+    expect(within(nav).getByRole('link', { name: 'Questions' })).toHaveAttribute(
+      'href',
+      '/questions',
+    )
   })
 
   it('redirects the root to the employees page', () => {

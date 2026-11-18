@@ -5,6 +5,7 @@ import EmployeeDetailPage from './pages/EmployeeDetailPage'
 import EmployeeEditPage from './pages/EmployeeEditPage'
 import EmployeesPage from './pages/EmployeesPage'
 import NotFoundPage from './pages/NotFoundPage'
+import QuestionsPage from './pages/QuestionsPage'
 
 // The router itself lives in main.tsx so tests can supply a MemoryRouter.
 export default function App() {
@@ -13,6 +14,7 @@ export default function App() {
       <Route element={<Layout />}>
         <Route index element={<Navigate to="/employees" replace />} />
         <Route path="employees" element={<EmployeesPage />} />
+        <Route path="questions" element={<QuestionsPage />} />
         <Route path="employees/new" element={<EmployeeCreatePage />} />
         <Route path="employees/:id" element={<EmployeeDetailPage />} />
         <Route path="employees/:id/edit" element={<EmployeeEditPage />} />

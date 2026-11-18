@@ -6,7 +6,13 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, it } from 'vitest'
 import App from './App'
 import { expectAccessible } from './test/a11y'
-import { buildEmployee, buildSalaryRecord, employeeList } from './test/fixtures'
+import {
+  buildAnswer,
+  buildEmployee,
+  buildSalaryRecord,
+  employeeList,
+  questionList,
+} from './test/fixtures'
 import { createWrapper } from './test/queryWrapper'
 import { serveEmployees } from './test/serveEmployees'
 import { server } from './test/server'
@@ -110,6 +116,24 @@ describe('accessibility (axe)', () => {
     })
     await expectAccessible()
   })
+
+  it.each(['payroll-by-department', 'gender-pay-gap', 'paid-below-band', 'no-raise-24-months'])(
+    'the %s answer',
+    async (id) => {
+      server.use(
+        http.get('/api/v1/questions', () => HttpResponse.json({ data: questionList })),
+        http.get('/api/v1/questions/:id/answer', ({ params }) =>
+          HttpResponse.json({ data: buildAnswer(params.id as string) }),
+        ),
+      )
+      renderApp(`/questions?question=${id}`)
+      await screen.findByRole('heading', {
+        level: 2,
+        name: questionList.find((q) => q.id === id)!.title,
+      })
+      await expectAccessible()
+    },
+  )
 
   it('page not found', async () => {
     renderApp('/nowhere')

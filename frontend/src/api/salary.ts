@@ -28,6 +28,10 @@ export function useChangeSalary() {
         })
       ).data,
     // The list shows current salary and the detail shows history; refresh both.
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.employees.all }),
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.employees.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all }),
+      ]),
   })
 }
