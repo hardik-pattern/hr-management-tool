@@ -83,6 +83,36 @@ Known limits:
 - `q` matches word prefixes with `LIKE 'x%'`. SQLite's `LIKE` is
   case-insensitive for ASCII only; on Postgres this would be `ILIKE`.
 
+## Analytics (steps B14 to B19)
+
+Every analytics request against the 10,000-employee seed, measured through the whole Rack stack (routing, query, JSON), median of 7 runs after a warm-up.
+
+| Request | Time | Response |
+|---|---|---|
+| Headcount, total only | 41 ms | 188 B |
+| Median pay by department | 53 ms | 1.1 KB |
+| Spread (p75 - p25) by department | 56 ms | 1.1 KB |
+| Sum by country, all statuses | 56 ms | 1.4 KB |
+| Median pay by job title and country (363 groups) | 102 ms | 58 KB |
+| Gender pay gap | 95 ms | 6.8 KB |
+| Paid outside their band (top 50 of 51) | 28 ms | 23 KB |
+| No salary change in 24 months (top 50 of 581) | 18 ms | 18 KB |
+| Question: leavers in the last year | 5 ms | 1.5 KB |
+
+A dashboard that asks for several of these at once costs a few hundred milliseconds of server time, one after another on a single-threaded dev server.
+
+**Where the time goes.** For "median by department" the engine takes about 38 ms: roughly 8 ms to read the 9,191 rows, 15 ms to convert each salary to USD with the exact `Money` arithmetic, and the rest to group and take percentiles. The conversion happens in Ruby, not SQL, on purpose: SQLite has no percentile function, and floating-point SQL would not round the way `Money` does, so a figure here always agrees with the same amount shown anywhere else. A headcount does not need the conversion and could skip it (saving about 15 ms of 26), but that special case is not worth the extra code at this size.
+
+**Query plans.** The plans for the SQL parts were read, and a spec (`spec/performance/query_plans_spec.rb`) fails if they regress:
+
+- *Out of band* finds each employee's band with `SEARCH pay_bands USING INDEX index_pay_bands_on_job_title_id_and_country_id`, never a scan.
+- *Stale salaries* finds each employee's latest change with `SEARCH salary_records USING COVERING INDEX index_salary_records_on_employee_id_and_effective_from`, answered from the index alone.
+- The engine narrows by status with `index_employees_on_status` and joins country, department and job title through primary keys.
+
+No new index was needed: the ones from the data model already cover these. The spec was checked by dropping the pay-band index, which turned it red.
+
+**Not done.** Aggregation could move into SQL for the metrics SQLite can compute (count, sum, average, min, max); percentiles would still need the rows. At 10,000 rows that is a saving of tens of milliseconds, so the single, exact path was kept.
+
 ## Test suite
 
 The whole backend suite runs in about 10 seconds.

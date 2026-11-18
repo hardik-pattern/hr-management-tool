@@ -245,7 +245,7 @@ Each step ends with: tests green, `bin/rubocop` clean, one commit.
   - Who hasn't had a raise in 24 months?
   - What did leavers earn in the last year? (`status=terminated`)
   Specs assert each question returns the hand-computed answer on a small fixture dataset. The NL layer (section 11) later maps free text onto this same machinery.
-- [ ] **B19. `perf: measure and index analytics queries`**: `EXPLAIN QUERY PLAN` review, add missing indexes, record timings in `docs/PERFORMANCE.md`. Add a regression spec asserting query count and no full-table scan on key paths.
+- [x] **B19. `perf: measure and index analytics queries`**: `EXPLAIN QUERY PLAN` review, add missing indexes, record timings in `docs/PERFORMANCE.md`. Add a regression spec asserting query count and no full-table scan on key paths.
 
 ### Phase B-5: Hardening
 - [x] **B20. `chore: backend hardening`**: Brakeman clean, strong params audit, CORS config for the UI origin, request-size and `per_page` limits, `docs/API.md` (generated or hand-written examples).
