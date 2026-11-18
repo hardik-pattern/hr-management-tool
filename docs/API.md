@@ -6,6 +6,7 @@ The backend is a JSON API under `/api/v1`. This document lists every endpoint wi
 - [Reference data](#reference-data)
 - [Employees](#employees)
 - [Salaries](#salaries)
+- [Analytics](#analytics)
 - [Errors](#errors)
 - [Configuration](#configuration)
 
@@ -688,6 +689,428 @@ Response `200`:
 ```
 
 Newest first.
+
+## Analytics
+
+How the organisation pays people. Everything here is computed on request from the current data, never stored or estimated.
+
+**Currency.** Salaries are held in each employee's own currency, so to compare countries every figure in the analytics is converted to **US dollars** with the same exact, half-up conversion used elsewhere, and reported in USD cents (with a `formatted` string). A headcount is a plain count.
+
+**Who is counted.** Active employees by default; `status` can be `terminated` or `all`. Soft-deleted employees are never counted. Every endpoint refuses unknown parameters with `400`.
+
+### GET /analytics/summary
+
+Answers one question: a **measure**, optionally **grouped** by up to two things, over the employees that match the filters.
+
+| Parameter | Meaning |
+|---|---|
+| `metric` | `headcount` (default), `sum`, `avg`, `median`, `p25`, `p75`, `min`, `max`, or `iqr` (the spread: 75th minus 25th percentile). Percentiles interpolate between ranks, like Excel's `PERCENTILE.INC`. |
+| `group_by` | Up to two, comma separated, no repeats, from `country`, `department`, `job_title`, `gender`, `level`. None gives only the overall `total`. |
+| `status` | `active` (default), `terminated` or `all`. |
+| `country_id`, `department_id`, `job_title_id`, `level`, `gender` | Filters. `level` is 1 to 7; `gender` is `female`, `male`, `non_binary` or `undisclosed`. |
+| `terminated_after` | A date. Only employees who left on or after it. Implies `status=terminated`, and contradicts any other status. |
+
+Each row has the `group` it describes, its `headcount`, and the `value` of the measure (`null` when nobody matched). The response repeats what was asked, so a screen can show it.
+
+```http
+GET /api/v1/analytics/summary?metric=median&group_by=department
+```
+
+Response `200`:
+
+```json
+{
+  "data": {
+    "metric": "median",
+    "group_by": [
+      "department"
+    ],
+    "status": "active",
+    "filters": {},
+    "unit": "usd_cents",
+    "currency": "USD",
+    "rows": [
+      {
+        "group": {
+          "department": {
+            "id": 4,
+            "label": "Customer Support"
+          }
+        },
+        "headcount": 1111,
+        "value": 4800600,
+        "formatted": "48,006.00 USD"
+      }
+    ],
+    "total": {
+      "group": {},
+      "headcount": 9191,
+      "value": 4870800,
+      "formatted": "48,708.00 USD"
+    }
+  }
+}
+```
+
+Shortened to one row. The `total` is the same measure over everyone matched.
+
+Grouping two ways:
+
+```http
+GET /api/v1/analytics/summary?metric=headcount&group_by=country,gender&status=all
+```
+
+Response `200`:
+
+```json
+{
+  "data": {
+    "metric": "headcount",
+    "group_by": [
+      "country"
+    ],
+    "status": "all",
+    "filters": {},
+    "unit": "count",
+    "currency": null,
+    "rows": [
+      {
+        "group": {
+          "country": {
+            "id": 7,
+            "label": "Australia"
+          },
+          "gender": {
+            "id": "female",
+            "label": "Female"
+          }
+        },
+        "headcount": 235,
+        "value": 235,
+        "formatted": "235"
+      }
+    ],
+    "total": {
+      "group": {},
+      "headcount": 9992,
+      "value": 9992,
+      "formatted": "9,992"
+    }
+  }
+}
+```
+
+Shortened to one row.
+
+Leavers since a date:
+
+```http
+GET /api/v1/analytics/summary?metric=avg&terminated_after=2025-01-01
+```
+
+Response `200`:
+
+```json
+{
+  "data": {
+    "metric": "avg",
+    "group_by": [],
+    "status": "terminated",
+    "filters": {
+      "terminated_after": "2025-01-01"
+    },
+    "unit": "usd_cents",
+    "currency": "USD",
+    "rows": [],
+    "total": {
+      "group": {},
+      "headcount": 396,
+      "value": 5269267,
+      "formatted": "52,692.67 USD"
+    }
+  }
+}
+```
+
+`terminated_after` implies `status` is `terminated`.
+
+An invalid question is a `400`:
+
+```http
+GET /api/v1/analytics/summary?metric=mode
+```
+
+Response `400`:
+
+```json
+{
+  "error": {
+    "code": "bad_request",
+    "message": "metric must be one of: headcount, sum, avg, median, p25, p75, min, max, iqr"
+  }
+}
+```
+
+### GET /insights/gender_pay_gap
+
+Compares women with men **in the same job title and country** (so each comparison is in one currency and ignores that women may work in different roles), then combines those comparisons weighted by the number of women. The raw gap, which does not account for role or country, is reported alongside for context.
+
+- Only women and men are compared. A job title and country with fewer than `min_group_size` (3) of either is left out.
+- `gap_percent` is negative when women are paid less. A gap resting on fewer than `small_sample_below` (20) women has `small_sample: true`: with so few people one salary can move it by several points.
+- This measures a difference in pay, not its cause. It does not account for tenure, performance or anything else.
+- Parameters: `status`, `country_id`, `department_id`.
+
+```http
+GET /api/v1/insights/gender_pay_gap
+```
+
+Response `200`:
+
+```json
+{
+  "data": {
+    "status": "active",
+    "filters": {},
+    "min_group_size": 3,
+    "small_sample_below": 20,
+    "adjusted_gap_percent": -0.85,
+    "unadjusted_gap_percent": -1.01,
+    "women": 4213,
+    "men": 4234,
+    "women_compared": 3935,
+    "comparisons_made": 242,
+    "comparisons_possible": 362,
+    "rows": [
+      {
+        "job_title": {
+          "id": 20,
+          "name": "Head of Support",
+          "level": 6,
+          "department": "Customer Support"
+        },
+        "women": 12,
+        "men": 11,
+        "women_compared": 4,
+        "gap_percent": -16.67,
+        "small_sample": true
+      }
+    ]
+  }
+}
+```
+
+Shortened to one job title.
+
+### GET /insights/out_of_band
+
+Employees paid outside the pay band for their job title in their country, furthest outside first. `distance_percent` is how far beyond the nearest edge of the band the salary is. A job title with no band in a country is not reported. The band's edges count as inside it.
+
+Parameters: `direction` (`any`, `below`, `above`), `status`, `country_id`, `department_id`, `job_title_id`, `limit` (default 50, at most 200). `total`, `below` and `above` count everyone, not just the rows returned.
+
+```http
+GET /api/v1/insights/out_of_band?direction=below&limit=1
+```
+
+Response `200`:
+
+```json
+{
+  "data": {
+    "status": "active",
+    "direction": "below",
+    "filters": {},
+    "limit": 1,
+    "total": 26,
+    "below": 26,
+    "above": 25,
+    "rows": [
+      {
+        "id": 8681,
+        "employee_number": "E008681",
+        "full_name": "Elena Nguyen",
+        "status": "active",
+        "country": {
+          "id": 1,
+          "code": "US",
+          "name": "United States"
+        },
+        "department": {
+          "id": 4,
+          "name": "Customer Support"
+        },
+        "job_title": {
+          "id": 16,
+          "name": "Support Agent",
+          "level": 1
+        },
+        "salary": {
+          "amount_cents": 3070000,
+          "currency": "USD",
+          "formatted": "30,700.00 USD"
+        },
+        "direction": "below",
+        "distance_percent": 14.72,
+        "band": {
+          "min_cents": 3600000,
+          "max_cents": 5630000,
+          "formatted": "36,000.00 USD to 56,300.00 USD"
+        }
+      }
+    ]
+  }
+}
+```
+
+### GET /insights/stale_salaries
+
+Employees whose latest salary record is older than `months`, longest first. Any salary record counts as a change, including the hire record, so someone never raised is included.
+
+Parameters: `months` (default 24, 1 to 120), `status`, `country_id`, `department_id`, `limit` (default 50, at most 200). `total` counts everyone, not just the rows returned.
+
+```http
+GET /api/v1/insights/stale_salaries?months=24&limit=1
+```
+
+Response `200`:
+
+```json
+{
+  "data": {
+    "status": "active",
+    "months": 24,
+    "filters": {},
+    "limit": 1,
+    "total": 581,
+    "rows": [
+      {
+        "id": 3152,
+        "employee_number": "E003152",
+        "full_name": "Riley Smith",
+        "status": "active",
+        "country": {
+          "id": 7,
+          "code": "AU",
+          "name": "Australia"
+        },
+        "department": {
+          "id": 1,
+          "name": "Engineering"
+        },
+        "job_title": {
+          "id": 2,
+          "name": "Software Engineer",
+          "level": 2
+        },
+        "salary": {
+          "amount_cents": 9430000,
+          "currency": "AUD",
+          "formatted": "94,300.00 AUD"
+        },
+        "last_change_on": "2017-07-11",
+        "months_since": 112
+      }
+    ]
+  }
+}
+```
+
+### GET /questions
+
+The catalog of common pay questions: median pay for each role in each country, the gender pay gap, who is paid below their band, payroll by department, the widest pay spread, who has had no salary change in 24 months, and what leavers earned in the last year. Each is a fixed definition of the analytics call that answers it.
+
+```http
+GET /api/v1/questions
+```
+
+Response `200`:
+
+```json
+{
+  "data": [
+    {
+      "id": "median-pay-by-role-and-country",
+      "title": "What is the median salary for each role in each country?",
+      "description": "The middle salary for every job title in every country, in USD so countries compare. Active employees.",
+      "kind": "summary"
+    }
+  ]
+}
+```
+
+Shortened to one question.
+
+### GET /questions/:id/answer
+
+Runs one question. The answer repeats the question and the exact parameters it used, with the `result` in the same shape as the analytics endpoint behind its `kind` (`summary`, `gender_pay_gap`, `out_of_band` or `stale_salaries`). A question takes no parameters; any are refused.
+
+```http
+GET /api/v1/questions/payroll-by-department/answer
+```
+
+Response `200`:
+
+```json
+{
+  "data": {
+    "id": "payroll-by-department",
+    "title": "What is the total payroll by department?",
+    "description": "The sum of current salaries for each department, in USD. Active employees.",
+    "kind": "summary",
+    "params": {
+      "metric": "sum",
+      "group_by": "department"
+    },
+    "result": {
+      "metric": "sum",
+      "group_by": [
+        "department"
+      ],
+      "status": "active",
+      "filters": {},
+      "unit": "usd_cents",
+      "currency": "USD",
+      "rows": [
+        {
+          "group": {
+            "department": {
+              "id": 4,
+              "label": "Customer Support"
+            }
+          },
+          "headcount": 1111,
+          "value": 5884954389,
+          "formatted": "58,849,543.89 USD"
+        }
+      ],
+      "total": {
+        "group": {},
+        "headcount": 9191,
+        "value": 48999274487,
+        "formatted": "489,992,744.87 USD"
+      }
+    }
+  }
+}
+```
+
+Shortened to one row. The `result` has the same shape as the analytics endpoint of that `kind`.
+
+An unknown question is a `404`:
+
+```http
+GET /api/v1/questions/no-such-question/answer
+```
+
+Response `404`:
+
+```json
+{
+  "error": {
+    "code": "not_found",
+    "message": "Question not found"
+  }
+}
+```
 
 ## Errors
 
