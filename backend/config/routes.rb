@@ -9,6 +9,8 @@ Rails.application.routes.draw do
 
       scope :insights, controller: :insights, as: :insights do
         get :gender_pay_gap
+        get :out_of_band
+        get :stale_salaries
       end
 
       resources :employees, only: %i[index create show update destroy] do

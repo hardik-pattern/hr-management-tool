@@ -74,4 +74,74 @@ RSpec.describe "Insights", type: :request do
       expect(response).to have_http_status(:bad_request)
     end
   end
+
+  describe "GET /api/v1/insights/out_of_band" do
+    let(:band) { create(:pay_band, job_title: title, country: us, min_cents: 5_000_000, max_cents: 9_000_000) }
+
+    before do
+      band
+      create(:employee, full_name: "Underpaid", gender: "female", country: us, department: department, job_title: title, current_salary_cents: 4_000_000)
+      create(:employee, full_name: "Fine", country: us, department: department, job_title: title, current_salary_cents: 7_000_000)
+    end
+
+    it "lists who is outside their band, with the direction, distance and band" do
+      get "/api/v1/insights/out_of_band"
+
+      expect(response).to have_http_status(:ok)
+      expect(data).to include("status" => "active", "direction" => "any", "limit" => 50, "total" => 1, "below" => 1, "above" => 0)
+      expect(data["rows"].size).to eq(1)
+      expect(data["rows"].first).to include(
+        "full_name" => "Underpaid", "direction" => "below", "distance_percent" => 20.0,
+        "salary" => { "amount_cents" => 4_000_000, "currency" => "USD", "formatted" => "40,000.00 USD" },
+        "band" => { "min_cents" => 5_000_000, "max_cents" => 9_000_000, "formatted" => "50,000.00 USD to 90,000.00 USD" },
+        "country" => include("name" => "United States"), "department" => include("name" => "Engineering"),
+        "job_title" => include("name" => "Senior Engineer")
+      )
+    end
+
+    it "can be filtered by direction, and answers an empty result without failing" do
+      get "/api/v1/insights/out_of_band", params: { direction: "above" }
+
+      expect(response).to have_http_status(:ok)
+      expect(data).to include("total" => 0, "rows" => [])
+    end
+
+    it "returns 400 for what it does not understand" do
+      get "/api/v1/insights/out_of_band", params: { direction: "sideways" }
+      expect(response).to have_http_status(:bad_request)
+
+      get "/api/v1/insights/out_of_band", params: { limit: 999 }
+      expect(error["message"]).to include("limit")
+    end
+  end
+
+  describe "GET /api/v1/insights/stale_salaries" do
+    around { |example| travel_to(Date.new(2025, 6, 15)) { example.run } }
+
+    before do
+      person = create(:employee, full_name: "Overlooked", country: us, department: department, job_title: title, hire_date: Date.new(2020, 1, 1))
+      create(:salary_record, employee: person, effective_from: Date.new(2020, 1, 1), reason: "hire")
+      create(:salary_record, employee: person, effective_from: Date.new(2022, 3, 10), reason: "merit")
+    end
+
+    it "lists who has gone longest without a change" do
+      get "/api/v1/insights/stale_salaries"
+
+      expect(response).to have_http_status(:ok)
+      expect(data).to include("status" => "active", "months" => 24, "total" => 1)
+      expect(data["rows"].first).to include("full_name" => "Overlooked", "last_change_on" => "2022-03-10", "months_since" => 39)
+    end
+
+    it "uses the number of months asked for" do
+      get "/api/v1/insights/stale_salaries", params: { months: 60 }
+
+      expect(data).to include("months" => 60, "total" => 0)
+    end
+
+    it "returns 400 for what it does not understand" do
+      get "/api/v1/insights/stale_salaries", params: { months: 0 }
+      expect(response).to have_http_status(:bad_request)
+      expect(error["message"]).to include("months")
+    end
+  end
 end

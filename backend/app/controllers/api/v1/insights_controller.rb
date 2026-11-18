@@ -8,6 +8,14 @@ module Api
 
         render json: { data: GenderPayGapPresenter.new(result) }
       end
+
+      def out_of_band
+        render json: { data: OutOfBandPresenter.new(Analytics::OutOfBand.call(request.query_parameters)) }
+      end
+
+      def stale_salaries
+        render json: { data: StaleSalariesPresenter.new(Analytics::StaleSalaries.call(request.query_parameters)) }
+      end
     end
   end
 end
