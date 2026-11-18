@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatAmount, parseAmount } from './money'
+import { formatAmount, formatUsdHeadline, parseAmount } from './money'
 
 describe('parseAmount', () => {
   it.each([
@@ -64,5 +64,20 @@ describe('formatAmount', () => {
     for (const cents of [0, 1, 99, 100, 5_000_050, 123_456_789]) {
       expect(parseAmount(formatAmount(cents, 2), 2)).toEqual({ ok: true, cents })
     }
+  })
+})
+
+describe('formatUsdHeadline', () => {
+  it.each([
+    [4_870_800, '$48,708'],
+    [4_870_849, '$48,708'],
+    [4_870_850, '$48,709'],
+    [99_999_900, '$999,999'],
+    [100_000_000, '$1M'],
+    [48_999_274_487, '$490M'],
+    [123_456_789_000, '$1.2B'],
+    [0, '$0'],
+  ])('shows %i cents as %s', (cents, expected) => {
+    expect(formatUsdHeadline(cents)).toBe(expected)
   })
 })

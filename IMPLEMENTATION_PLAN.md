@@ -266,7 +266,7 @@ React + Vite + TypeScript, Bootstrap 5 via react-bootstrap (no custom design sys
 - [x] **F6. `feat: create and edit employee form`**: validation mirrors backend, field-level server errors shown.
 - [x] **F6a. `feat: terminate, rehire, delete and restore actions`**: status chip in the table, terminate dialog (date required), rehire action, delete with confirm, "Deleted" filter view with Restore. Tests for each flow and error messages (for example the email-taken restore error).
 - [x] **F7. `feat: change salary dialog`**: amount, currency (locked to country), effective date, reason. Optimistic refresh of history.
-- [ ] **F8. ON HOLD (depends on Phase B-4): `feat: insights dashboard`**: payroll by department, headcount by country, pay distribution shown as tables with Bootstrap progress bars (no chart library up front; add one later only if needed), gender gap, out-of-band and stale lists.
+- [x] **F8. `feat: insights dashboard`**: payroll by department, headcount by country, pay distribution shown as tables with Bootstrap progress bars (no chart library up front; add one later only if needed), gender gap, out-of-band and stale lists.
 - [x] **F8a. ON HOLD (depends on Phase B-4): `feat: common questions page`**: one-click list of the catalog questions (from B18a); clicking one runs it and shows the answer table plus the spec used. This is the main "answer questions" surface and needs no AI.
 - [ ] **F9. ON HOLD (depends on Phase B-4): `feat: analytics explorer`**: pick metric, group-by, filters; results table with inline bars; shows the spec used.
 - [ ] **F10. ON HOLD with B13: `feat: CSV export button`**: exports the current filter.

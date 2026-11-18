@@ -32,3 +32,24 @@ export function formatAmount(cents: number, exponent: number): string {
   const fraction = digits.slice(-exponent).replace(/0+$/, '')
   return fraction ? `${whole}.${fraction}` : whole
 }
+
+const whole = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  maximumFractionDigits: 0,
+})
+const compact = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  notation: 'compact',
+  maximumFractionDigits: 1,
+})
+
+/**
+ * USD cents as a short figure for a headline: "$48,708", "$490M". It rounds,
+ * so it is for glancing; put the exact amount alongside it.
+ */
+export function formatUsdHeadline(cents: number): string {
+  const dollars = cents / 100
+  return Math.abs(dollars) >= 1_000_000 ? compact.format(dollars) : whole.format(dollars)
+}

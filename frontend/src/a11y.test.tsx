@@ -9,7 +9,11 @@ import { expectAccessible } from './test/a11y'
 import {
   buildAnswer,
   buildEmployee,
+  buildGenderGap,
+  buildOutOfBand,
   buildSalaryRecord,
+  buildStale,
+  buildSummary,
   employeeList,
   questionList,
 } from './test/fixtures'
@@ -134,6 +138,38 @@ describe('accessibility (axe)', () => {
       await expectAccessible()
     },
   )
+
+  it('the insights dashboard', async () => {
+    server.use(
+      http.get('/api/v1/analytics/summary', ({ request }) => {
+        const params = new URL(request.url).searchParams
+        const metric = (params.get('metric') ?? 'sum') as 'sum'
+        const summary = buildSummary({ metric })
+        if (params.get('group_by') === 'level') {
+          summary.group_by = ['level']
+          summary.rows = [
+            {
+              group: { level: { id: 1, label: 'Level 1' } },
+              headcount: 5,
+              value: 100,
+              formatted: '1.00 USD',
+            },
+          ]
+        }
+        return HttpResponse.json({ data: summary })
+      }),
+      http.get('/api/v1/insights/gender_pay_gap', () =>
+        HttpResponse.json({ data: buildGenderGap() }),
+      ),
+      http.get('/api/v1/insights/out_of_band', () => HttpResponse.json({ data: buildOutOfBand() })),
+      http.get('/api/v1/insights/stale_salaries', () => HttpResponse.json({ data: buildStale() })),
+    )
+    renderApp('/insights')
+    await screen.findByText('Staff Engineer')
+    await screen.findAllByRole('link', { name: 'Asha Rao' })
+    await screen.findByText('Level 1')
+    await expectAccessible()
+  })
 
   it('page not found', async () => {
     renderApp('/nowhere')
