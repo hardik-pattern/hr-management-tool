@@ -3,6 +3,10 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
+      scope :analytics, controller: :analytics, as: :analytics do
+        get :summary
+      end
+
       resources :employees, only: %i[index create show update destroy] do
         member do
           post :terminate
