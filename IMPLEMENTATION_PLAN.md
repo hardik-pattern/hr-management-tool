@@ -236,7 +236,7 @@ Each step ends with: tests green, `bin/rubocop` clean, one commit.
 - [x] **B16. `feat: analytics summary endpoint`**: `GET /analytics/summary`. Request specs including invalid spec -> 400.
 - [x] **B17. `feat: gender pay gap insight`**: per job title and level, comparing like with like (avoids Simpson's-paradox misreads). Spec with hand-computed expected values.
 - [x] **B18. `feat: out-of-band and stale-salary insights`**: employees outside their pay band (with distance), and employees with no raise in N months (time frozen in specs).
-- [ ] **B18a. `feat: common questions catalog`**: `Questions::Catalog` is a fixed, versioned list of HR questions, each mapped to an `Analytics::Spec` or an insight. Endpoints: `GET /api/v1/questions` (list) and `GET /api/v1/questions/:id/answer` (run). Initial catalog:
+- [x] **B18a. `feat: common questions catalog`**: `Questions::Catalog` is a fixed, versioned list of HR questions, each mapped to an `Analytics::Spec` or an insight. Endpoints: `GET /api/v1/questions` (list) and `GET /api/v1/questions/:id/answer` (run). Initial catalog:
   - What is the median salary by job title and country?
   - What is the gender pay gap by job title and level?
   - Who is paid below the band for their role?

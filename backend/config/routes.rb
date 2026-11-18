@@ -13,6 +13,10 @@ Rails.application.routes.draw do
         get :stale_salaries
       end
 
+      resources :questions, only: :index do
+        get :answer, on: :member
+      end
+
       resources :employees, only: %i[index create show update destroy] do
         member do
           post :terminate
