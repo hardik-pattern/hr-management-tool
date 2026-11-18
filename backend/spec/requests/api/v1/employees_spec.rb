@@ -217,6 +217,37 @@ RSpec.describe "Employees", type: :request do
 
     around { |example| travel_to(today) { example.run } }
 
+    describe "unknown parameters on the action endpoints" do
+      it "are refused rather than ignored, so a typo does not silently do nothing" do
+        post "/api/v1/employees/#{employee.id}/terminate", params: { termination_date: "2025-06-01", status: "x" }, as: :json
+        expect(response).to have_http_status(:bad_request)
+        expect(error["message"]).to include("status")
+
+        employee.update!(status: "terminated", termination_date: Date.new(2025, 1, 1))
+        post "/api/v1/employees/#{employee.id}/rehire", params: { salary: 5 }, as: :json
+        expect(response).to have_http_status(:bad_request)
+        expect(error["message"]).to include("salary")
+        expect(employee.reload).to be_terminated
+      end
+
+      it "are refused on delete and restore, which take no parameters" do
+        delete "/api/v1/employees/#{employee.id}", params: { hard: true }, as: :json
+        expect(response).to have_http_status(:bad_request)
+        expect(employee.reload).not_to be_deleted
+
+        employee.update!(deleted_at: Time.current)
+        post "/api/v1/employees/#{employee.id}/restore", params: { force: true }, as: :json
+        expect(response).to have_http_status(:bad_request)
+        expect(employee.reload).to be_deleted
+      end
+
+      it "do not get in the way of the parameters each endpoint does take" do
+        post "/api/v1/employees/#{employee.id}/terminate", params: { termination_date: "2025-06-01" }, as: :json
+
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
     describe "POST /api/v1/employees/:id/terminate" do
       it "terminates the employee" do
         post "/api/v1/employees/#{employee.id}/terminate", params: { termination_date: "2025-06-01" }, as: :json

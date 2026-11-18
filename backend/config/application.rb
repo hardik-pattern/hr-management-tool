@@ -40,5 +40,14 @@ module Backend
     # Middleware like session, flash, cookies can be added back manually.
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
+
+    # Answer unhandled exceptions in the API's JSON error shape, not an HTML page.
+    # A lambda, so the class is resolved per request and survives code reloading.
+    config.exceptions_app = ->(env) { JsonExceptionsApp.call(env) }
+
+    # Every endpoint reads explicitly nested params ({ employee: { ... } }); the
+    # automatic copy Rails makes under the controller's name only adds noise
+    # and gets in the way of rejecting unknown keys.
+    config.action_controller.wrap_parameters_by_default = false
   end
 end

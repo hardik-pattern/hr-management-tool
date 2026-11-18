@@ -37,22 +37,26 @@ module Api
       end
 
       def destroy
+        reject_unknown_params
         render_employee Employees::SoftDelete.call(employee: find_employee)
       end
 
       def terminate
+        reject_unknown_params(:termination_date)
         render_employee Employees::Terminate.call(
           employee: find_employee, termination_date: params.require(:termination_date)
         )
       end
 
       def rehire
+        reject_unknown_params(:salary_cents, :effective_from)
         render_employee Employees::Rehire.call(
           employee: find_employee, salary_cents: params[:salary_cents], effective_from: params[:effective_from]
         )
       end
 
       def restore
+        reject_unknown_params
         render_employee Employees::Restore.call(employee: find_employee(Employee.deleted))
       end
 

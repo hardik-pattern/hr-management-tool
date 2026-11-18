@@ -6,6 +6,14 @@ module StrictParams
 
   private
 
+  # For endpoints that take a few top-level values (such as terminate) rather
+  # than a nested object: refuses any body or query key not in +allowed+.
+  def reject_unknown_params(*allowed)
+    given = request.request_parameters.keys + request.query_parameters.keys
+    unpermitted = given.map(&:to_sym) - allowed
+    raise ActionController::UnpermittedParameters, unpermitted if unpermitted.any?
+  end
+
   def strict_params(key, fields)
     attributes = params.require(key)
     unpermitted = attributes.keys.map(&:to_sym) - fields

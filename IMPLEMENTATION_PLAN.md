@@ -248,7 +248,7 @@ Each step ends with: tests green, `bin/rubocop` clean, one commit.
 - [ ] **B19. `perf: measure and index analytics queries`**: `EXPLAIN QUERY PLAN` review, add missing indexes, record timings in `docs/PERFORMANCE.md`. Add a regression spec asserting query count and no full-table scan on key paths.
 
 ### Phase B-5: Hardening
-- [ ] **B20. `chore: backend hardening`**: Brakeman clean, strong params audit, CORS config for the UI origin, request-size and `per_page` limits, `docs/API.md` (generated or hand-written examples).
+- [x] **B20. `chore: backend hardening`**: Brakeman clean, strong params audit, CORS config for the UI origin, request-size and `per_page` limits, `docs/API.md` (generated or hand-written examples).
 
 **Checkpoint:** backend complete and demoable with curl before any UI work.
 
