@@ -4,6 +4,7 @@ import EmployeeCreatePage from './pages/EmployeeCreatePage'
 import EmployeeDetailPage from './pages/EmployeeDetailPage'
 import EmployeeEditPage from './pages/EmployeeEditPage'
 import EmployeesPage from './pages/EmployeesPage'
+import ExplorerPage from './pages/ExplorerPage'
 import InsightsPage from './pages/InsightsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import QuestionsPage from './pages/QuestionsPage'
@@ -16,6 +17,7 @@ export default function App() {
         <Route index element={<Navigate to="/employees" replace />} />
         <Route path="employees" element={<EmployeesPage />} />
         <Route path="insights" element={<InsightsPage />} />
+        <Route path="explorer" element={<ExplorerPage />} />
         <Route path="questions" element={<QuestionsPage />} />
         <Route path="employees/new" element={<EmployeeCreatePage />} />
         <Route path="employees/:id" element={<EmployeeDetailPage />} />

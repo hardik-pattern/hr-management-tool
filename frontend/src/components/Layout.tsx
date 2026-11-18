@@ -49,6 +49,9 @@ export default function Layout() {
               <Nav.Link as={NavLink} to="/questions">
                 Questions
               </Nav.Link>
+              <Nav.Link as={NavLink} to="/explorer">
+                Explorer
+              </Nav.Link>
             </Nav>
           </Navbar.Collapse>
         </Container>

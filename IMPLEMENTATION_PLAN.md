@@ -268,7 +268,7 @@ React + Vite + TypeScript, Bootstrap 5 via react-bootstrap (no custom design sys
 - [x] **F7. `feat: change salary dialog`**: amount, currency (locked to country), effective date, reason. Optimistic refresh of history.
 - [x] **F8. `feat: insights dashboard`**: payroll by department, headcount by country, pay distribution shown as tables with Bootstrap progress bars (no chart library up front; add one later only if needed), gender gap, out-of-band and stale lists.
 - [x] **F8a. ON HOLD (depends on Phase B-4): `feat: common questions page`**: one-click list of the catalog questions (from B18a); clicking one runs it and shows the answer table plus the spec used. This is the main "answer questions" surface and needs no AI.
-- [ ] **F9. ON HOLD (depends on Phase B-4): `feat: analytics explorer`**: pick metric, group-by, filters; results table with inline bars; shows the spec used.
+- [x] **F9. `feat: analytics explorer`**: pick metric, group-by, filters; results table with inline bars; shows the spec used.
 - [ ] **F10. ON HOLD with B13: `feat: CSV export button`**: exports the current filter.
 - [x] **F11. `chore: UX polish and accessibility`**: keyboard navigation, aria labels, responsive layout, empty/error copy.
 

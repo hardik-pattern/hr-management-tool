@@ -171,6 +171,18 @@ describe('accessibility (axe)', () => {
     await expectAccessible()
   })
 
+  it('the explorer', async () => {
+    server.use(
+      http.get('/api/v1/analytics/summary', () =>
+        HttpResponse.json({ data: buildSummary({ metric: 'median' }) }),
+      ),
+    )
+    renderApp('/explorer?group_by=department,country&country_id=1')
+    await screen.findByRole('table', { name: /Median pay/ })
+    await screen.findByRole('option', { name: 'Japan' })
+    await expectAccessible()
+  })
+
   it('page not found', async () => {
     renderApp('/nowhere')
     await screen.findByRole('heading', { name: 'Page not found' })
