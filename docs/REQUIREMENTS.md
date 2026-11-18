@@ -1,48 +1,52 @@
 # Salary Management: Requirements
 
 ## Goal
-Give ACME's HR Manager a web app to manage salary data for 10,000 employees across multiple countries, replacing Excel, and to answer questions about how the organization pays people.
+Give ACME's HR Manager a web app to manage salary data for 10,000 employees across multiple countries, replacing Excel, and (the second half of the brief) to answer questions about how the organisation pays people.
 
 ## User
-One persona: the HR Manager. Single organization, no other roles.
+One persona: the HR Manager. Single organisation, no other roles.
 
-## Scope and features
+## Scope
 
-**Manage**
-- Employees: create, view, edit, search, filter (country, department, job title, status, salary range), sort, paginate.
-- Salaries: change a salary with an effective date and reason; full history per employee. Money is held in the employee's local currency.
-- Leavers: terminate an employee (history kept, rehire possible).
-- Mistakes: soft-delete an employee record and restore it. Nothing is hard-deleted.
-- Export the filtered employee list to CSV.
+### Built
+**Find people**
+- Search by name, email or employee number; filter by country, department, job title, status (active, terminated, all) and, within a country, salary range; sort; page through 10,000 rows quickly.
+- Every view has a shareable URL.
 
-**Answer**
-- A catalog of common HR questions, each answered in one click with a table and the query used:
-  1. Median salary by job title and country?
-  2. Gender pay gap by job title and level?
-  3. Who is paid below the band for their role?
-  4. Total payroll by department, in USD?
-  5. Which teams have the widest pay spread?
-  6. Who has not had a raise in 24 months?
-  7. What did leavers earn in the last year?
-- An explorer to pick a metric (headcount, total, average, median, p25, p75, min, max), a grouping, and filters.
-- Default numbers cover active employees; HR can include leavers. Soft-deleted records never count.
+**Manage them**
+- Create and edit employees (name, email, gender, department, job title; country and hire date are fixed once created).
+- Change a salary with a start date and a reason. The change is added to the history, never overwritten, and the full history is shown with each change as a percentage.
+- Terminate an employee who left (history kept) and rehire them, optionally with a new salary.
+- Delete a record that should not exist (a duplicate or mistake) and restore it. Nothing is destroyed.
+- Salaries are held in each employee's own country's currency.
 
 **Platform**
-- Rails API, SQLite, React UI (Bootstrap), seeded with 10,000 employees, deployed publicly.
+- Rails API, SQLite, React UI (Bootstrap), seeded with 10,000 employees. Fast, deterministic tests; an accessibility audit of every screen.
+
+### On hold (decided, not dropped)
+| Item | Why held |
+|---|---|
+| **Answering pay questions across the organisation**: a catalogue of one-click questions (median pay by role and country, gender pay gap, pay outside a role's band, payroll by department in USD, widest pay spread, no raise in 24 months, what leavers earned) and a metric/group-by explorer | A substantial piece of its own: it needs an analytics engine, USD conversion and percentile maths. The data it needs is already in place (pay bands, indexed filters, seeded cases for each question), so it can be added without reworking what exists. |
+| Free-text (AI) questions | Would sit on top of the analytics above, and never produce numbers itself. |
+| CSV export of the filtered list | Paused by decision. |
+
+Until the analytics are built, the app covers the *manage* half of the brief fully and the *answer* half only through search, filters and sorting, within one country at a time for salary.
 
 ## Deliberately left out
 | Left out | Why |
 |---|---|
-| Login and roles | One persona; adds effort without answering the HR need |
-| Payroll runs, tax, payslips | A different product; this is salary management |
-| Live exchange rates | Static rates are enough to compare; feeds add failure modes |
-| Excel import screen | The seed provides the data; import needs its own mapping and error UX |
-| Raise approval workflows | Process-heavy and not needed to answer pay questions |
-| Audit of non-salary edits | Salary history is the audit that matters |
-| Free-text (AI) questions | Deferred; the catalog answers the common questions deterministically. May be added later on top of the same query engine |
+| Login and roles | One persona; adds effort without answering the HR need. Production would sit behind the organisation's sign-in. |
+| Payroll runs, tax, payslips | A different product; this is salary management. |
+| Live exchange rates | Fixed rates are enough to compare; feeds add failure modes. |
+| Excel import screen | The seed provides the data; import needs its own mapping and error UX. |
+| Raise approval workflows | Process-heavy and not needed here. |
+| Scheduled (future-dated) raises | The current salary would then show a raise that has not happened. A change takes effect on or before today. |
+| Audit of non-salary edits | Salary history is the audit that matters. |
+| Deployment | Out of scope for this build. |
 
 ## Success criteria
 - HR can find any employee and change a salary in under a minute.
-- Every catalog question returns a correct, reproducible answer; numbers come from SQL, never from a model.
-- Lists and analytics respond in well under a second on 10,000 rows.
-- Core logic is covered by fast, deterministic automated tests.
+- Money is exact: integers in minor units, never floats; each salary in its own currency.
+- Every rule holds in the app and again in the database; salary history cannot be edited.
+- Lists respond in a few milliseconds on 10,000 rows, and a deep page costs the same as the first.
+- Core logic is covered by fast, deterministic tests (323 backend specs, 326 frontend tests).
