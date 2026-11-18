@@ -7,6 +7,10 @@ Rails.application.routes.draw do
         get :summary
       end
 
+      scope :insights, controller: :insights, as: :insights do
+        get :gender_pay_gap
+      end
+
       resources :employees, only: %i[index create show update destroy] do
         member do
           post :terminate
