@@ -270,7 +270,7 @@ React + Vite + TypeScript, Bootstrap 5 via react-bootstrap (no custom design sys
 - [ ] **F8a. ON HOLD (depends on Phase B-4): `feat: common questions page`**: one-click list of the catalog questions (from B18a); clicking one runs it and shows the answer table plus the spec used. This is the main "answer questions" surface and needs no AI.
 - [ ] **F9. ON HOLD (depends on Phase B-4): `feat: analytics explorer`**: pick metric, group-by, filters; results table with inline bars; shows the spec used.
 - [ ] **F10. ON HOLD with B13: `feat: CSV export button`**: exports the current filter.
-- [ ] **F11. `chore: UX polish and accessibility`**: keyboard navigation, aria labels, responsive layout, empty/error copy.
+- [x] **F11. `chore: UX polish and accessibility`**: keyboard navigation, aria labels, responsive layout, empty/error copy.
 
 ---
 

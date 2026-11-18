@@ -3,6 +3,7 @@ import { Form } from 'react-bootstrap'
 import { useTerminateEmployee } from '../../api/employees'
 import type { Employee } from '../../api/types'
 import { describeError } from '../../lib/errors'
+import { invalidProps, feedbackId } from '../../lib/fieldError'
 import { formatDate, todayIso } from '../../lib/format'
 import ActionDialog from './ActionDialog'
 
@@ -55,10 +56,13 @@ export default function TerminateDialog({ employee, onClose, onDone }: Props) {
           value={date}
           min={employee.hire_date}
           max={todayIso()}
-          isInvalid={!!problem}
+          autoFocus
+          {...invalidProps('termination-date', problem)}
           onChange={(event) => setDate(event.target.value)}
         />
-        <Form.Control.Feedback type="invalid">{problem}</Form.Control.Feedback>
+        <Form.Control.Feedback type="invalid" id={feedbackId('termination-date')}>
+          {problem}
+        </Form.Control.Feedback>
       </Form.Group>
     </ActionDialog>
   )

@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Alert, Button, Col, Form, InputGroup, Row, Spinner } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
 import type { ApiError } from '../../api/ApiError'
 import { useCountries, useCurrencies, useDepartments, useJobTitles } from '../../api/reference'
 import type { Employee } from '../../api/types'
+import { feedbackId, invalidProps } from '../../lib/fieldError'
 import { formatDate, todayIso } from '../../lib/format'
 import { GENDER_LABELS } from '../../lib/labels'
 import {
@@ -14,6 +15,7 @@ import {
   splitServerErrors,
   validate,
 } from './employeeFormValues'
+import { useFocusInvalid } from './useFocusInvalid'
 
 interface Props {
   mode: FormMode
@@ -30,6 +32,8 @@ export default function EmployeeForm(props: Props) {
   const { mode, initialValues, employee, submitting, serverError, onSubmit, cancelTo } = props
   const [values, setValues] = useState(initialValues)
   const [submitted, setSubmitted] = useState(false)
+  const [attempts, setAttempts] = useState(0)
+  const formRef = useRef<HTMLFormElement>(null)
 
   const countries = useCountries()
   const currencies = useCurrencies()
@@ -52,18 +56,39 @@ export default function EmployeeForm(props: Props) {
   const set = (field: FormField, value: string) =>
     setValues((current) => ({ ...current, [field]: value }))
 
+  // Matches the controlId of each field's Form.Group below.
+  const controlIds: Record<FormField, string> = {
+    full_name: 'employee-name',
+    email: 'employee-email',
+    gender: 'employee-gender',
+    hire_date: 'employee-hire-date',
+    country_id: 'employee-country',
+    department_id: 'employee-department',
+    job_title_id: 'employee-job-title',
+    salary: 'employee-salary',
+  }
+
   const control = (field: FormField) => ({
     value: values[field],
-    isInvalid: !!errorFor(field),
+    ...invalidProps(controlIds[field], errorFor(field)),
     onChange: (event: { target: { value: string } }) => set(field, event.target.value),
   })
   const feedback = (field: FormField) => (
-    <Form.Control.Feedback type="invalid">{errorFor(field)}</Form.Control.Feedback>
+    <Form.Control.Feedback type="invalid" id={feedbackId(controlIds[field])}>
+      {errorFor(field)}
+    </Form.Control.Feedback>
+  )
+
+  // After a save attempt, or a refusal from the server, focus goes to the first field at fault.
+  useFocusInvalid(
+    formRef,
+    `${attempts}|${serverError?.message ?? ''}|${JSON.stringify(serverError?.details ?? {})}`,
   )
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
     setSubmitted(true)
+    setAttempts((count) => count + 1)
     if (Object.keys(validate(values, mode, exponent)).length === 0) onSubmit(values, exponent)
   }
 
@@ -71,6 +96,7 @@ export default function EmployeeForm(props: Props) {
 
   return (
     <Form
+      ref={formRef}
       onSubmit={handleSubmit}
       noValidate
       aria-label={mode === 'create' ? 'New employee' : 'Edit employee'}

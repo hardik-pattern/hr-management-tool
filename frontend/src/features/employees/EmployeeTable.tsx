@@ -57,7 +57,11 @@ export default function EmployeeTable({
                 Salary
               </th>
             )}
-            {onRestore && <th scope="col">Actions</th>}
+            {onRestore && (
+              <th scope="col" className="sticky-end">
+                Actions
+              </th>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -84,7 +88,7 @@ export default function EmployeeTable({
               </td>
               <td className="text-end text-nowrap">{employee.salary.formatted}</td>
               {onRestore && (
-                <td>
+                <td className="sticky-end">
                   <Button
                     size="sm"
                     variant="outline-primary"

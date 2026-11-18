@@ -3,6 +3,7 @@ import { Alert, Button, Spinner } from 'react-bootstrap'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useEmployee } from '../api/employees'
 import { useSalaryRecords } from '../api/salary'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 import ChangeSalaryDialog from '../features/employees/ChangeSalaryDialog'
 import DeleteDialog from '../features/employees/DeleteDialog'
 import EmployeeProfile from '../features/employees/EmployeeProfile'
@@ -28,6 +29,7 @@ export default function EmployeeDetailPage() {
   const history = useSalaryRecords(id)
   const backTo = `/employees${state?.listSearch ?? ''}`
   const notFound = id === undefined || employee.error?.isNotFound === true
+  useDocumentTitle(notFound ? 'Employee not found' : (employee.data?.full_name ?? 'Employee'))
   const failed = id !== undefined && employee.error && !notFound
 
   return (

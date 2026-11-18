@@ -4,6 +4,7 @@ import { useCurrencies } from '../../api/reference'
 import { useChangeSalary } from '../../api/salary'
 import type { Employee, SalaryChange, SalaryRecord } from '../../api/types'
 import { describeError } from '../../lib/errors'
+import { feedbackId, invalidProps } from '../../lib/fieldError'
 import { formatDate, todayIso } from '../../lib/format'
 import { REASON_LABELS } from '../../lib/labels'
 import { parseAmount } from '../../lib/money'
@@ -86,11 +87,14 @@ export default function ChangeSalaryDialog({ employee, latestRecord, onClose, on
           <Form.Control
             inputMode="decimal"
             value={amount}
-            isInvalid={!!problems.amount}
+            autoFocus
+            {...invalidProps('salary-amount', problems.amount)}
             onChange={(event) => setAmount(event.target.value)}
           />
           <InputGroup.Text>{currencyCode}</InputGroup.Text>
-          <Form.Control.Feedback type="invalid">{problems.amount}</Form.Control.Feedback>
+          <Form.Control.Feedback type="invalid" id={feedbackId('salary-amount')}>
+            {problems.amount}
+          </Form.Control.Feedback>
         </InputGroup>
       </Form.Group>
       <p className="small text-body-secondary mb-3" aria-live="polite">
@@ -108,10 +112,12 @@ export default function ChangeSalaryDialog({ employee, latestRecord, onClose, on
           value={effectiveFrom}
           min={earliest}
           max={todayIso()}
-          isInvalid={!!problems.date}
+          {...invalidProps('salary-effective-from', problems.date)}
           onChange={(event) => setEffectiveFrom(event.target.value)}
         />
-        <Form.Control.Feedback type="invalid">{problems.date}</Form.Control.Feedback>
+        <Form.Control.Feedback type="invalid" id={feedbackId('salary-effective-from')}>
+          {problems.date}
+        </Form.Control.Feedback>
       </Form.Group>
 
       <Form.Group controlId="salary-reason">

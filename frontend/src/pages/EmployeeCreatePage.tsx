@@ -1,9 +1,11 @@
 import { useNavigate } from 'react-router-dom'
 import { useCreateEmployee } from '../api/employees'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 import EmployeeForm from '../features/employees/EmployeeForm'
 import { EMPTY_VALUES, toNewEmployee } from '../features/employees/employeeFormValues'
 
 export default function EmployeeCreatePage() {
+  useDocumentTitle('New employee')
   const navigate = useNavigate()
   const create = useCreateEmployee()
 

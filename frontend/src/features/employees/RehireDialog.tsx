@@ -4,6 +4,7 @@ import { useRehireEmployee } from '../../api/employees'
 import { useCurrencies } from '../../api/reference'
 import type { Employee } from '../../api/types'
 import { describeError } from '../../lib/errors'
+import { feedbackId, invalidProps } from '../../lib/fieldError'
 import { todayIso } from '../../lib/format'
 import { parseAmount } from '../../lib/money'
 import ActionDialog from './ActionDialog'
@@ -63,11 +64,14 @@ export default function RehireDialog({ employee, onClose, onDone }: Props) {
           <Form.Control
             inputMode="decimal"
             value={salary}
-            isInvalid={!!problems.salary}
+            autoFocus
+            {...invalidProps('rehire-salary', problems.salary)}
             onChange={(event) => setSalary(event.target.value)}
           />
           <InputGroup.Text>{currencyCode}</InputGroup.Text>
-          <Form.Control.Feedback type="invalid">{problems.salary}</Form.Control.Feedback>
+          <Form.Control.Feedback type="invalid" id={feedbackId('rehire-salary')}>
+            {problems.salary}
+          </Form.Control.Feedback>
         </InputGroup>
       </Form.Group>
       {newSalary && (
@@ -77,10 +81,12 @@ export default function RehireDialog({ employee, onClose, onDone }: Props) {
             type="date"
             value={effectiveFrom}
             max={todayIso()}
-            isInvalid={!!problems.date}
+            {...invalidProps('rehire-effective-from', problems.date)}
             onChange={(event) => setEffectiveFrom(event.target.value)}
           />
-          <Form.Control.Feedback type="invalid">{problems.date}</Form.Control.Feedback>
+          <Form.Control.Feedback type="invalid" id={feedbackId('rehire-effective-from')}>
+            {problems.date}
+          </Form.Control.Feedback>
         </Form.Group>
       )}
     </ActionDialog>

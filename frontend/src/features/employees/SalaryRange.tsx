@@ -3,6 +3,8 @@ import { Col, Form, InputGroup, Row } from 'react-bootstrap'
 import { formatAmount, parseAmount } from '../../lib/money'
 import { SEARCH_DEBOUNCE_MS } from './SearchBox'
 
+const PROBLEM_ID = 'salary-range-problem'
+
 interface Props {
   currencyCode: string
   /** Decimal places of the currency (2 for USD, 0 for JPY). */
@@ -39,6 +41,11 @@ export default function SalaryRange({ currencyCode, exponent, min, max, onChange
         ? 'The minimum cannot be more than the maximum.'
         : undefined
 
+  // Both fields share one message, so both point at it.
+  const invalidFor = problem
+    ? { isInvalid: true, 'aria-invalid': true as const, 'aria-describedby': PROBLEM_ID }
+    : { isInvalid: false }
+
   const wantedMin = parsedMin.ok ? parsedMin.cents : undefined
   const wantedMax = parsedMax.ok ? parsedMax.cents : undefined
 
@@ -62,7 +69,7 @@ export default function SalaryRange({ currencyCode, exponent, min, max, onChange
               placeholder="Min"
               inputMode="decimal"
               value={minText}
-              isInvalid={!!problem}
+              {...invalidFor}
               onChange={(event) => setMinText(event.target.value)}
             />
           </InputGroup>
@@ -74,14 +81,14 @@ export default function SalaryRange({ currencyCode, exponent, min, max, onChange
               placeholder="Max"
               inputMode="decimal"
               value={maxText}
-              isInvalid={!!problem}
+              {...invalidFor}
               onChange={(event) => setMaxText(event.target.value)}
             />
           </InputGroup>
         </Col>
       </Row>
       {problem && (
-        <div role="alert" className="text-danger small mt-1">
+        <div id={PROBLEM_ID} role="alert" className="text-danger small mt-1">
           {problem}
         </div>
       )}

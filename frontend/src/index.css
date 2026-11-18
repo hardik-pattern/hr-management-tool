@@ -1,1 +1,15 @@
-/* Bootstrap provides the base styles; add app-specific rules here. */
+/* Bootstrap provides the base styles; app-specific rules go here. */
+
+/* The page container takes focus after navigation (see Layout); it is not a
+   control, so it needs no focus ring. */
+main:focus {
+  outline: none;
+}
+
+/* Keeps a row's action button reachable when a wide table scrolls sideways. */
+.table .sticky-end {
+  position: sticky;
+  right: 0;
+  background-color: var(--bs-body-bg);
+  box-shadow: -1px 0 0 var(--bs-border-color);
+}

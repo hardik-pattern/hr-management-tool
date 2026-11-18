@@ -1,6 +1,7 @@
 import { Alert, Button, Spinner } from 'react-bootstrap'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useEmployee, useUpdateEmployee } from '../api/employees'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 import EmployeeForm from '../features/employees/EmployeeForm'
 import { toChanges, valuesFromEmployee } from '../features/employees/employeeFormValues'
 
@@ -9,6 +10,7 @@ export default function EmployeeEditPage() {
   const id = /^[1-9]\d*$/.test(params.id ?? '') ? Number(params.id) : undefined
   const navigate = useNavigate()
   const employee = useEmployee(id)
+  useDocumentTitle(employee.data ? `Edit ${employee.data.full_name}` : 'Edit employee')
   const update = useUpdateEmployee()
   const detailPath = `/employees/${id}`
 

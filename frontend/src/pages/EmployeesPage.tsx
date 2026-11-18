@@ -9,8 +9,10 @@ import { useCursorPager } from '../features/employees/useCursorPager'
 import { useFlash } from '../features/employees/useFlash'
 import { useListParams } from '../features/employees/useListParams'
 import { describeError } from '../lib/errors'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 export default function EmployeesPage() {
+  useDocumentTitle('Employees')
   const list = useListParams()
   const [flash, setFlash] = useFlash()
   const [restoreProblem, setRestoreProblem] = useState<string[]>([])
