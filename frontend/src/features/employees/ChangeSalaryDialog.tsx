@@ -10,7 +10,8 @@ import { parseAmount } from '../../lib/money'
 import { formatPercentChange, percentChange } from '../../lib/salary'
 import ActionDialog from './ActionDialog'
 
-// "hire" belongs to creating the employee and "rehire" to rehiring them; the API refuses both here.
+// "hire" belongs to creating the employee, which the API enforces. "rehire" is accepted by the
+// API, but the Rehire action records it, so a plain salary change does not offer it.
 const REASONS: SalaryChange['reason'][] = ['merit', 'promotion', 'adjustment', 'correction']
 
 interface Props {
